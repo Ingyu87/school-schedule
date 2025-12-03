@@ -1,20 +1,72 @@
 // Tab 3: 학급 시간표
 
 function initEditorSelector() {
-    const sel = document.getElementById('editor-class-select');
-    if (!sel) return;
+    const gradeSel = document.getElementById('editor-grade-select');
+    const classSel = document.getElementById('editor-class-select');
+    if (!gradeSel || !classSel) return;
     
-    sel.innerHTML = '';
-    Object.keys(state.config).forEach(gr => {
-        for(let i = 1; i <= state.config[gr].classes; i++) {
-            let k = `${gr}-${i}반`; 
-            sel.innerHTML += `<option value="${k}">${k}</option>`;
+    const grades = ['1학년', '2학년', '3학년', '4학년', '5학년', '6학년'];
+    gradeSel.innerHTML = '';
+    grades.forEach(gr => {
+        if (state.config[gr]) {
+            gradeSel.innerHTML += `<option value="${gr}">${gr}</option>`;
         }
     });
-    if(!editorState.classKey) editorState.classKey = sel.value;
-    sel.value = editorState.classKey;
-    loadEditor(sel.value);
+    
+    // 현재 선택 상태에서 학년/반 추출
+    let currentGrade = null;
+    let currentClass = null;
+    if (editorState.classKey) {
+        const parts = editorState.classKey.split('-'); // "3학년-1반"
+        currentGrade = parts[0] + (parts[0].endsWith('학년') ? '' : '학년');
+        const clsPart = parts[1] || '';
+        currentClass = parseInt(clsPart.replace('반','')) || 1;
+    }
+    
+    if (!currentGrade || !state.config[currentGrade]) {
+        currentGrade = gradeSel.options[0]?.value;
+    }
+    populateEditorClassOptions(currentGrade, currentClass);
+    
+    gradeSel.value = currentGrade;
+    const finalClass = classSel.value || '1';
+    const key = `${currentGrade}-${finalClass}반`;
+    if (!editorState.classKey) editorState.classKey = key;
+    loadEditor(editorState.classKey);
 }
+
+function populateEditorClassOptions(gradeLabel, selectedClassNum) {
+    const classSel = document.getElementById('editor-class-select');
+    if (!classSel) return;
+    classSel.innerHTML = '';
+    
+    const count = state.config[gradeLabel]?.classes || 0;
+    for (let i = 1; i <= count; i++) {
+        const selected = selectedClassNum === i ? 'selected' : '';
+        classSel.innerHTML += `<option value="${i}" ${selected}>${i}반</option>`;
+    }
+}
+
+window.onEditorGradeChange = function() {
+    const gradeSel = document.getElementById('editor-grade-select');
+    const classSel = document.getElementById('editor-class-select');
+    if (!gradeSel || !classSel) return;
+    const grade = gradeSel.value;
+    if (!grade) return;
+    populateEditorClassOptions(grade, 1);
+    const cls = classSel.value || '1';
+    loadEditor(`${grade}-${cls}반`);
+};
+
+window.onEditorClassChange = function() {
+    const gradeSel = document.getElementById('editor-grade-select');
+    const classSel = document.getElementById('editor-class-select');
+    if (!gradeSel || !classSel) return;
+    const grade = gradeSel.value;
+    const cls = classSel.value;
+    if (!grade || !cls) return;
+    loadEditor(`${grade}-${cls}반`);
+};
 
 window.loadEditor = function(k) { 
     editorState.classKey = k; 
