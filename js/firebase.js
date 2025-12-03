@@ -204,3 +204,20 @@ function loadFromLocalStorage() {
     }
 }
 
+// Firebase 데이터 초기화
+async function clearFirebaseData() {
+    if (!isFirebaseEnabled || !firebaseAuth.currentUser) {
+        console.log("Firebase not enabled or not authenticated");
+        return;
+    }
+    
+    try {
+        const { doc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+        const docRef = doc(firebaseDb, 'artifacts', appId, 'public', 'data', 'schedules', 'gadong_2026');
+        await deleteDoc(docRef);
+        console.log("Firebase data cleared");
+    } catch (e) {
+        console.error("Failed to clear Firebase data:", e);
+    }
+}
+

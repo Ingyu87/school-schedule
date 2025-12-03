@@ -82,4 +82,42 @@ async function init() {
 // DOM 로드 후 실행
 document.addEventListener('DOMContentLoaded', init);
 
+// 전체 초기화 (비밀번호 필요)
+window.resetAllData = function() {
+    const password = prompt('⚠️ 모든 데이터가 삭제됩니다!\n\n비밀번호를 입력하세요:');
+    
+    if (password === null) {
+        // 취소 버튼 클릭
+        return;
+    }
+    
+    if (password !== '0403') {
+        alert('❌ 비밀번호가 올바르지 않습니다.');
+        return;
+    }
+    
+    // 최종 확인
+    const confirm = window.confirm('정말로 모든 데이터를 초기화하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다!');
+    
+    if (!confirm) {
+        return;
+    }
+    
+    try {
+        // 로컬 스토리지 초기화
+        localStorage.clear();
+        
+        // Firebase 데이터 초기화 (있다면)
+        if (typeof clearFirebaseData === 'function') {
+            clearFirebaseData();
+        }
+        
+        // 페이지 새로고침
+        alert('✅ 모든 데이터가 초기화되었습니다.\n\n페이지를 새로고침합니다.');
+        location.reload();
+    } catch (error) {
+        console.error('초기화 오류:', error);
+        alert('❌ 초기화 중 오류가 발생했습니다.');
+    }
+};
 
