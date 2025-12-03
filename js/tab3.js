@@ -70,8 +70,18 @@ window.onEditorClassChange = function() {
 
 window.loadEditor = function(k) { 
     editorState.classKey = k; 
-    editorState.selectedSubj = null; 
-    renderPalette(); 
+    editorState.selectedSubj = null;
+    
+    // 팔레트 초기 렌더링 (한 번만)
+    const paletteJeondam = document.getElementById('palette-jeondam');
+    const paletteDamim = document.getElementById('palette-damim');
+    if (!paletteJeondam || paletteJeondam.children.length === 0) {
+        renderPalette(); 
+    } else {
+        // 이미 렌더링되어 있으면 카운트만 업데이트
+        updatePaletteCounts();
+    }
+    
     renderEditorGrid(); 
 };
 
@@ -533,7 +543,16 @@ window.downloadExcel = function() {
 };
 
 function renderTab3() {
-    renderPalette();
-    renderEditorGrid();
+    const k = editorState.classKey;
+    if (k) {
+        // 팔레트 초기 렌더링 (한 번만)
+        const paletteJeondam = document.getElementById('palette-jeondam');
+        if (!paletteJeondam || paletteJeondam.children.length === 0) {
+            renderPalette();
+        } else {
+            updatePaletteCounts();
+        }
+        renderEditorGrid();
+    }
 }
 
