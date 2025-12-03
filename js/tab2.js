@@ -95,16 +95,6 @@ window.removeSpecialSupport = function(idx) {
     renderTab2();
 };
 
-// 특수부장 시수 입력 변경 시 자동 추가
-window.handleSpecialHoursChange = function() {
-    const gradeNum = document.getElementById('special-grade-sel')?.value;
-    const classNum = document.getElementById('special-class-sel')?.value;
-    const subject = document.getElementById('special-subj-sel')?.value;
-    const hours = document.getElementById('special-hrs-input')?.value;
-    
-    if (!gradeNum || !classNum || !subject || !hours) return;
-    addSpecialSupport();
-};
 
 function renderTeacherSetup() {
     const container = document.getElementById('teacher-setup-list');
@@ -138,6 +128,9 @@ function renderTeacherSetup() {
                            value="${t.name}" onchange="updTName(${idx},this.value)">
                     <div class="flex items-center gap-2">
                         <span class="text-sm font-bold px-2 py-1 rounded ${statusClass}">${totalHours}/21시간</span>
+                        <button onclick="resetTeacherAssignments(${idx})" class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs hover:bg-gray-200" title="배정 초기화">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </button>
                         <button onclick="toggleTeacherTimetable(${idx})" class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
                             <i class="fa-solid fa-calendar mr-1"></i>시간표
                         </button>
@@ -396,6 +389,32 @@ window.removeTeacherAssignment = function(teacherIdx, assignIdx) {
     state.teachers[teacherIdx].assignments.splice(assignIdx, 1);
     saveData({ teachers: state.teachers });
     renderTab2();
+};
+
+window.resetTeacherAssignments = function(idx) {
+    const t = state.teachers[idx];
+    if (!t) return;
+    
+    showConfirm(`${t.name} 선생님의 배정을 모두 초기화하시겠습니까?`, () => {
+        t.assignments = [];
+        saveData({ teachers: state.teachers });
+        
+        // 버튼 목록 다시 채우기
+        populateTeacherAssignmentOptions(idx);
+        
+        // 시수 표시 업데이트
+        const statusEl = document.querySelector(`#teacher-setup-list > div:nth-child(${idx + 1}) .text-sm.font-bold.px-2`);
+        if (statusEl) {
+            statusEl.className = 'text-sm font-bold px-2 py-1 rounded bg-orange-100 text-orange-700';
+            statusEl.textContent = '0/21시간';
+        }
+        
+        // 배정 목록 초기화
+        const badgesContainer = document.querySelector(`#teacher-setup-list > div:nth-child(${idx + 1}) .flex.flex-wrap.mb-3`);
+        if (badgesContainer) {
+            badgesContainer.innerHTML = '<span class="text-gray-400 text-sm">배정된 과목 없음</span>';
+        }
+    });
 };
 
 function renderTeacherTimetables() {
