@@ -156,7 +156,7 @@ function renderTeacherSetup() {
                     <select id="t${idx}-subj" class="border rounded p-1.5 text-sm" onchange="updateTeacherClassOptions(${idx})">
                         <option value="">과목</option>
                     </select>
-                    <select id="t${idx}-class" class="border rounded p-1.5 text-sm" onchange="onTeacherClassChange(${idx})">
+                    <select id="t${idx}-class" class="border rounded p-1.5 text-sm">
                         <option value="">반</option>
                     </select>
                     <button onclick="addTeacherAssignment(${idx})" class="bg-indigo-600 text-white px-3 py-1.5 rounded text-sm hover:bg-indigo-700">
@@ -462,6 +462,7 @@ function renderTeacherTimetables() {
                         data-col="${c}"
                         onfocus="handleGridFocus(event)"
                         onclick="handleGridClick(event)"
+                        oninput="fmtTeacher(this)"
                         onkeydown="handleGridKeydown(event, 'teacher-${idx}', ${r}, ${c}, 6, 5)"
                         onchange="onTeacherCellInput(${idx},${r},${c}, this.value)"
                     />
@@ -664,15 +665,6 @@ window.clickTeacherCell = function(teacherIdx, r, c, event) {
             selectTeacherClass(savedTeacher, savedClass, savedSubj);
         }, 0);
     }
-};
-
-// 직접 입력으로 교사 시간표 수정
-window.onTeacherCellInput = function(teacherIdx, r, c, value) {
-    const t = state.teachers[teacherIdx];
-    if (!t.schedule) t.schedule = grid(6,5);
-    t.schedule[r][c] = value.trim();
-    saveData({ teachers: state.teachers });
-    renderTeacherTimetables();
 };
 
 
