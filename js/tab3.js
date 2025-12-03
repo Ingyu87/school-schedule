@@ -82,7 +82,8 @@ window.loadEditor = function(k) {
         updatePaletteCounts();
     }
     
-    renderEditorGrid(); 
+    renderEditorGrid();
+    updateClassCompletionCheckbox();
 };
 
 function renderEditorGrid() {
@@ -543,6 +544,7 @@ window.downloadExcel = function() {
 };
 
 function renderTab3() {
+    renderClassCompletionPanel();
     const k = editorState.classKey;
     if (k) {
         // 팔레트 초기 렌더링 (한 번만)
@@ -555,4 +557,71 @@ function renderTab3() {
         renderEditorGrid();
     }
 }
+
+// 학급 시간표 완료 관련 함수
+function renderClassCompletionPanel() {
+    const panel = document.getElementById('class-completion-panel');
+    const summary = document.getElementById('class-completion-summary');
+    if (!panel || !summary) return;
+    
+    panel.innerHTML = '';
+    
+    // 모든 학급 키 수집
+    const allClasses = [];
+    Object.keys(state.config).forEach(gr => {
+        for (let i = 1; i <= state.config[gr].classes; i++) {
+            allClasses.push(`${gr}-${i}반`);
+        }
+    });
+    
+    const completedCount = allClasses.filter(k => state.timetableCompletion[k]).length;
+    const totalCount = allClasses.length;
+    
+    summary.innerHTML = `<span class="${completedCount === totalCount ? 'text-green-600' : 'text-orange-600'}">${completedCount} / ${totalCount} 완료</span>`;
+    
+    // 학년별로 그룹화하여 표시
+    ['1학년', '2학년', '3학년', '4학년', '5학년', '6학년'].forEach(gr => {
+        const classCount = state.config[gr]?.classes || 0;
+        if (classCount === 0) return;
+        
+        const gradeClasses = [];
+        for (let i = 1; i <= classCount; i++) {
+            const k = `${gr}-${i}반`;
+            const completed = state.timetableCompletion[k] || false;
+            const statusClass = completed ? 'bg-green-100 border-green-300 text-green-700' : 'bg-gray-100 border-gray-300 text-gray-600';
+            const icon = completed ? '<i class="fa-solid fa-check mr-1"></i>' : '<i class="fa-regular fa-square mr-1"></i>';
+            
+            gradeClasses.push(`
+                <div class="px-2 py-1 rounded border ${statusClass} text-xs font-bold flex items-center justify-center">
+                    ${icon}${i}반
+                </div>`);
+        }
+        
+        panel.innerHTML += `
+            <div class="border rounded-lg p-3 bg-white">
+                <div class="text-sm font-bold text-gray-700 mb-2">${gr}</div>
+                <div class="grid grid-cols-3 md:grid-cols-6 gap-1">
+                    ${gradeClasses.join('')}
+                </div>
+            </div>`;
+    });
+}
+
+function updateClassCompletionCheckbox() {
+    const checkbox = document.getElementById('current-class-completed');
+    if (!checkbox || !editorState.classKey) return;
+    
+    checkbox.checked = state.timetableCompletion[editorState.classKey] || false;
+}
+
+window.toggleClassCompletion = function() {
+    if (!editorState.classKey) return;
+    
+    const checkbox = document.getElementById('current-class-completed');
+    state.timetableCompletion[editorState.classKey] = checkbox.checked;
+    
+    saveData({ timetableCompletion: state.timetableCompletion });
+    renderClassCompletionPanel();
+    updateTabAccessibility();
+};
 

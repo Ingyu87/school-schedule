@@ -3,7 +3,38 @@
 function renderTab2() {
     renderSpecialSupport();
     renderTeacherSetup();
+    renderTeacherCompletionPanel();
 }
+
+function renderTeacherCompletionPanel() {
+    const panel = document.getElementById('teacher-completion-panel');
+    const summary = document.getElementById('teacher-completion-summary');
+    if (!panel || !summary) return;
+    
+    panel.innerHTML = '';
+    
+    const totalTeachers = state.teachers.length;
+    const completedTeachers = state.teachers.filter(t => t.completed).length;
+    
+    summary.innerHTML = `<span class="${completedTeachers === totalTeachers ? 'text-green-600' : 'text-orange-600'}">${completedTeachers} / ${totalTeachers} 완료</span>`;
+    
+    state.teachers.forEach((t, idx) => {
+        const statusClass = t.completed ? 'bg-green-100 border-green-300 text-green-800' : 'bg-gray-100 border-gray-300 text-gray-600';
+        const icon = t.completed ? '<i class="fa-solid fa-check text-green-600 mr-1"></i>' : '<i class="fa-regular fa-square mr-1"></i>';
+        
+        panel.innerHTML += `
+            <div class="px-3 py-2 rounded border ${statusClass} text-sm font-bold flex items-center justify-center">
+                ${icon}${t.name}
+            </div>`;
+    });
+}
+
+window.toggleTeacherCompletion = function(idx) {
+    state.teachers[idx].completed = !state.teachers[idx].completed;
+    saveData({ teachers: state.teachers });
+    renderTab2();
+    updateTabAccessibility();
+};
 
 function renderSpecialSupport() {
     const list = document.getElementById('special-support-list');
@@ -121,13 +152,24 @@ function renderTeacherSetup() {
                            totalHours > 21 ? 'bg-red-100 text-red-700' : 
                            'bg-orange-100 text-orange-700';
         
+        const completedCheck = t.completed ? 'checked' : '';
+        const completedBadge = t.completed ? 
+            '<span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded ml-2"><i class="fa-solid fa-check mr-1"></i>완료</span>' : '';
+        
         container.innerHTML += `
             <div class="bg-white rounded-lg border p-4">
                 <div class="flex justify-between items-center mb-3">
-                    <input class="font-bold text-lg border-b-2 border-gray-200 w-28 outline-none focus:border-indigo-500" 
-                           value="${t.name}" onchange="updTName(${idx},this.value)">
+                    <div class="flex items-center gap-2">
+                        <input class="font-bold text-lg border-b-2 border-gray-200 w-28 outline-none focus:border-indigo-500" 
+                               value="${t.name}" onchange="updTName(${idx},this.value)">
+                        ${completedBadge}
+                    </div>
                     <div class="flex items-center gap-2">
                         <span class="text-sm font-bold px-2 py-1 rounded ${statusClass}">${totalHours}/21시간</span>
+                        <label class="flex items-center cursor-pointer bg-green-50 border border-green-300 px-3 py-1 rounded text-sm hover:bg-green-100">
+                            <input type="checkbox" ${completedCheck} onchange="toggleTeacherCompletion(${idx})" class="mr-2">
+                            <span class="text-green-700 font-bold">완료</span>
+                        </label>
                         <button onclick="resetTeacherAssignments(${idx})" class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs hover:bg-gray-200" title="배정 초기화">
                             <i class="fa-solid fa-rotate-left"></i>
                         </button>

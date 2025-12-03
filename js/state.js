@@ -35,15 +35,16 @@ let state = {
     roles: {},
     allocations: { common: {}, extra: {} },
     teachers: [
-        {id:1, name:'전담1', assignments: [], schedule: grid(6,5)}, 
-        {id:2, name:'전담2', assignments: [], schedule: grid(6,5)},
-        {id:3, name:'전담3', assignments: [], schedule: grid(6,5)}, 
-        {id:4, name:'전담4', assignments: [], schedule: grid(6,5)},
-        {id:5, name:'전담5', assignments: [], schedule: grid(6,5)}, 
-        {id:6, name:'전담6', assignments: [], schedule: grid(6,5)}
+        {id:1, name:'전담1', assignments: [], schedule: grid(6,5), completed: false}, 
+        {id:2, name:'전담2', assignments: [], schedule: grid(6,5), completed: false},
+        {id:3, name:'전담3', assignments: [], schedule: grid(6,5), completed: false}, 
+        {id:4, name:'전담4', assignments: [], schedule: grid(6,5), completed: false},
+        {id:5, name:'전담5', assignments: [], schedule: grid(6,5), completed: false}, 
+        {id:6, name:'전담6', assignments: [], schedule: grid(6,5), completed: false}
     ],
     specialSupport: [],
     timetables: {},
+    timetableCompletion: {}, // {'1학년-1반': false, '1학년-2반': false, ...}
     curriculum: {
         '1학년': { '국어': 6, '수학': 4, '사회':0, '과학':0, '영어':0, '음악':0, '미술':0, '체육':0, '실과':0, '도덕':0, '통합': 10, '창체': 3 },
         '2학년': { '국어': 6, '수학': 4, '사회':0, '과학':0, '영어':0, '음악':0, '미술':0, '체육':0, '실과':0, '도덕':0, '통합': 10, '창체': 3 },
@@ -63,6 +64,7 @@ function initTimetables() {
         for(let i = 1; i <= state.config[gr].classes; i++) {
             const k = `${gr}-${i}반`;
             if(!state.timetables[k]) state.timetables[k] = grid(6,5);
+            if(state.timetableCompletion[k] === undefined) state.timetableCompletion[k] = false;
         }
     });
 }
