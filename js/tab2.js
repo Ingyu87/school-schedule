@@ -166,6 +166,9 @@ function renderTeacherSetup() {
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="text-sm font-bold px-2 py-1 rounded ${statusClass}">${totalHours}/21시간</span>
+                        <button onclick="downloadTeacherExcel(${idx})" class="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600" title="시간표 저장">
+                            <i class="fa-solid fa-file-excel mr-1"></i>저장
+                        </button>
                         <label class="flex items-center cursor-pointer bg-green-50 border border-green-300 px-3 py-1 rounded text-sm hover:bg-green-100">
                             <input type="checkbox" ${completedCheck} onchange="toggleTeacherCompletion(${idx})" class="mr-2">
                             <span class="text-green-700 font-bold">완료</span>

@@ -527,20 +527,51 @@ window.resetClassTimetable = function() {
 };
 
 window.downloadExcel = function() {
-    const wb = XLSX.utils.book_new();
-    const classPeriods = ["1교시","2교시","3교시","4교시","5교시","6교시"];
-    Object.keys(state.timetables).forEach(classKey => {
-        const tt = state.timetables[classKey];
-        const data = [['', '월', '화', '수', '목', '금']];
+    const k = editorState.classKey;
+    if (!k) {
+        showAlert('학급을 선택해주세요.', 'error');
+        return;
+    }
+    
+    try {
+        const wb = XLSX.utils.book_new();
+        const classPeriods = ["1교시","2교시","3교시","4교시","5교시","6교시"];
+        
+        // 현재 선택된 학급의 시간표만 생성
+        const tt = state.timetables[k];
+        const data = [['교시', '월', '화', '수', '목', '금']];
+        
         classPeriods.forEach((p, i) => {
             const row = [p];
-            for (let j = 0; j < 5; j++) row.push(tt[i] ? tt[i][j] || '' : '');
+            for (let j = 0; j < 5; j++) {
+                row.push(tt[i] ? tt[i][j] || '' : '');
+            }
             data.push(row);
         });
+        
         const ws = XLSX.utils.aoa_to_sheet(data);
-        XLSX.utils.book_append_sheet(wb, ws, classKey.replace('학년-', '-').replace('반', ''));
-    });
-    XLSX.writeFile(wb, `시간표_${new Date().toISOString().split('T')[0]}.xlsx`);
+        
+        // 열 너비 설정
+        ws['!cols'] = [
+            { wch: 8 },  // 교시
+            { wch: 12 }, // 월
+            { wch: 12 }, // 화
+            { wch: 12 }, // 수
+            { wch: 12 }, // 목
+            { wch: 12 }  // 금
+        ];
+        
+        const sheetName = k.replace('학년-', '').replace('반', '반');
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        
+        const fileName = `${k.replace('-', '')}_시간표_${new Date().toISOString().split('T')[0]}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+        
+        showAlert(`${k} 시간표가 저장되었습니다!`, 'success');
+    } catch (error) {
+        console.error('엑셀 생성 오류:', error);
+        showAlert('엑셀 파일 생성 중 오류가 발생했습니다.', 'error');
+    }
 };
 
 function renderTab3() {

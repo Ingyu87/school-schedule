@@ -63,6 +63,16 @@ function updateTabAccessibility() {
             finalBtn.classList.remove('hover:bg-purple-700');
         }
     }
+    
+    // 전체 전담 시간표 버튼 활성화/비활성화
+    const allTeachersBtn = document.getElementById('all-teachers-excel-btn');
+    if (allTeachersBtn) {
+        if (allTeachersCompleted) {
+            allTeachersBtn.disabled = false;
+        } else {
+            allTeachersBtn.disabled = true;
+        }
+    }
 }
 
 // 초기화
