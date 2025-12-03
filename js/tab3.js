@@ -355,33 +355,38 @@ window.clickCell = function(r, c) {
         return;
     }
     
-    // 전담 과목 입력 제한 제거 - 이제 전담 과목도 자유롭게 입력 가능
-    
-    if(editorState.selectedSubj) {
-        // 목표 시수 확인
-        const jList = getGradeAllocations(gr);
-        const isJeondam = jList.some(x => x.startsWith(editorState.selectedSubj));
-        let targetHours = 0;
-        
-        if (isJeondam) {
-            const alloc = jList.find(x => x.startsWith(editorState.selectedSubj));
-            targetHours = parseFloat(alloc.match(/\(([\d.]+)\)/)?.[1] || 0);
-        } else {
-            targetHours = state.curriculum[gr]?.[editorState.selectedSubj] || 0;
-        }
-        
-        const currentHours = countUse(k, editorState.selectedSubj);
-        
-        // 목표 시수에 도달했으면 더 이상 입력 불가
-        if (currentHours >= targetHours && targetHours > 0) {
-            showAlert(`${editorState.selectedSubj}은(는) 이미 ${targetHours}시간이 모두 배정되었습니다.`);
-            return;
-        }
-        
-        state.timetables[k][r][c] = editorState.selectedSubj;
-    } else {
+    // 이미 채워진 셀을 클릭하면 삭제
+    const currentValue = state.timetables[k] ? state.timetables[k][r][c] : '';
+    if (currentValue) {
         state.timetables[k][r][c] = '';
+        renderEditorGrid(); 
+        renderPalette();
+        saveData({timetables: state.timetables});
+        return;
     }
+    
+    // 과목이 선택되지 않았으면 아무것도 하지 않음
+    if(!editorState.selectedSubj) {
+        return;
+    }
+    
+    // 목표 시수 확인 - 전담 과목도 교육과정 전체 시수를 기준으로 함
+    const jList = getGradeAllocations(gr);
+    const isJeondam = jList.some(x => x.startsWith(editorState.selectedSubj));
+    
+    // 전담 과목이든 담임 과목이든 교육과정 전체 시수를 목표로 함
+    // (전담 배정 시수는 이미 전담 교사가 배정한 것이므로, 담임은 나머지를 채울 수 있음)
+    const targetHours = state.curriculum[gr]?.[editorState.selectedSubj] || 0;
+    
+    const currentHours = countUse(k, editorState.selectedSubj);
+    
+    // 목표 시수에 도달했으면 더 이상 입력 불가
+    if (currentHours >= targetHours && targetHours > 0) {
+        showAlert(`${editorState.selectedSubj}은(는) 이미 ${targetHours}시간이 모두 배정되었습니다.`);
+        return;
+    }
+    
+    state.timetables[k][r][c] = editorState.selectedSubj;
     
     renderEditorGrid(); 
     renderPalette();
