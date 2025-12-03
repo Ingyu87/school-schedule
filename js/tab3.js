@@ -322,13 +322,50 @@ window.selSubj = function(s) {
         ];
         
         allItems.forEach(item => {
-            const subjName = item.querySelector('span')?.textContent;
+            const subjName = item.querySelector('span:first-child')?.textContent;
             if (subjName === editorState.selectedSubj) {
                 item.classList.add('active');
             }
         });
     }
 };
+
+// 팔레트의 시수 카운트만 업데이트 (HTML 재생성 안 함)
+function updatePaletteCounts() {
+    const k = editorState.classKey;
+    if (!k) return;
+    const gr = k.split('-')[0];
+    
+    // 전담 과목
+    const paletteJeondam = document.getElementById('palette-jeondam');
+    if (paletteJeondam) {
+        paletteJeondam.querySelectorAll('.palette-item').forEach(item => {
+            const subjName = item.querySelector('span:first-child')?.textContent;
+            const badge = item.querySelector('.count-badge');
+            if (subjName && badge) {
+                const cur = countUse(k, subjName);
+                const tgt = badge.textContent.split('/')[1];
+                badge.textContent = `${cur}/${tgt}`;
+                badge.className = `count-badge ${cur >= parseFloat(tgt) ? 'done' : ''}`;
+            }
+        });
+    }
+    
+    // 담임 과목
+    const paletteDamim = document.getElementById('palette-damim');
+    if (paletteDamim) {
+        paletteDamim.querySelectorAll('.palette-item').forEach(item => {
+            const subjName = item.querySelector('span:first-child')?.textContent;
+            const badge = item.querySelector('.count-badge');
+            if (subjName && badge) {
+                const cur = countUse(k, subjName);
+                const tgt = badge.textContent.split('/')[1];
+                badge.textContent = `${cur}/${tgt}`;
+                badge.className = `count-badge ${cur >= parseFloat(tgt) ? 'done' : ''}`;
+            }
+        });
+    }
+}
 
 function getFacilityRow(classRow, gradeNum) {
     if (classRow < 3) return classRow;
@@ -395,7 +432,7 @@ window.clickCell = function(r, c) {
     if (currentValue) {
         state.timetables[k][r][c] = '';
         renderEditorGrid(); 
-        renderPalette();
+        updatePaletteCounts(); // 팔레트 재렌더링 대신 카운트만 업데이트
         saveData({timetables: state.timetables});
         return;
     }
@@ -424,7 +461,7 @@ window.clickCell = function(r, c) {
     state.timetables[k][r][c] = editorState.selectedSubj;
     
     renderEditorGrid(); 
-    renderPalette();
+    updatePaletteCounts(); // 팔레트 재렌더링 대신 카운트만 업데이트
     saveData({timetables: state.timetables});
 };
 
@@ -463,7 +500,7 @@ function doAutoFill() {
         }
     }
     renderEditorGrid(); 
-    renderPalette();
+    updatePaletteCounts(); // 팔레트 재렌더링 대신 카운트만 업데이트
     saveData({timetables: state.timetables});
 }
 
@@ -474,7 +511,7 @@ window.resetClassTimetable = function() {
         state.timetables[k] = grid(6, 5);
         saveData({ timetables: state.timetables });
         renderEditorGrid();
-        renderPalette();
+        updatePaletteCounts(); // 팔레트 재렌더링 대신 카운트만 업데이트
     });
 };
 
