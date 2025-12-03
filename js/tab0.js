@@ -13,7 +13,9 @@ function renderDailyCounts() {
     if (!dcBody) return;
     
     dcBody.innerHTML = '';
-    Object.keys(state.dailyCounts).forEach(gr => {
+    const grades = ['1학년', '2학년', '3학년', '4학년', '5학년', '6학년'];
+    grades.forEach(gr => {
+        if (!state.dailyCounts[gr]) return;
         const counts = state.dailyCounts[gr];
         let row = `<tr><td class="font-bold text-gray-700">${gr}</td>`;
         let total = 0;
@@ -31,7 +33,9 @@ function renderClassConfig() {
     if (!container) return;
     
     container.innerHTML = '';
-    Object.keys(state.config).forEach(gr => {
+    const grades = ['1학년', '2학년', '3학년', '4학년', '5학년', '6학년'];
+    grades.forEach(gr => {
+        if (!state.config[gr]) return;
         const count = state.config[gr].classes;
         const div = document.createElement('div');
         div.className = "flex flex-col items-center bg-white p-2 rounded border shadow-sm";
@@ -46,7 +50,9 @@ function renderCurriculum() {
     if (!tbody) return;
     
     tbody.innerHTML = '';
-    Object.keys(state.curriculum).forEach(gr => {
+    const grades = ['1학년', '2학년', '3학년', '4학년', '5학년', '6학년'];
+    grades.forEach(gr => {
+        if (!state.curriculum[gr]) return;
         const row = document.createElement('tr');
         const subjects = state.curriculum[gr];
         let total = 0;
@@ -135,7 +141,11 @@ function renderCommonAllocations() {
         const targetTotal = targetJeondam + targetBogun;
         const currentTotal = currentJeondam + currentBogun;
         
-        const isComplete = currentTotal >= targetTotal && targetTotal > 0;
+        // 완료 여부는 "전담 시수만" 기준으로 판단
+        // (예: 5학년은 보건 0.5가 기본이므로 전담 6시간만 채워지면 완료로 표시)
+        const completeTarget = targetJeondam;
+        const completeCurrent = currentJeondam;
+        const isComplete = completeCurrent >= completeTarget && completeTarget > 0;
         const statusClass = isComplete ? 'bg-green-100 text-green-700' : (targetTotal > 0 ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-500');
         const statusText = targetTotal > 0 ? `${currentTotal}/${targetTotal}` : '-';
 
