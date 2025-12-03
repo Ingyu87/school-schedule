@@ -84,6 +84,17 @@ window.removeSpecialSupport = function(idx) {
     renderTab2();
 };
 
+// 특수부장 시수 입력 변경 시 자동 추가
+window.handleSpecialHoursChange = function() {
+    const gradeNum = document.getElementById('special-grade-sel')?.value;
+    const classNum = document.getElementById('special-class-sel')?.value;
+    const subject = document.getElementById('special-subj-sel')?.value;
+    const hours = document.getElementById('special-hrs-input')?.value;
+    
+    if (!gradeNum || !classNum || !subject || !hours) return;
+    addSpecialSupport();
+};
+
 function renderTeacherSetup() {
     const container = document.getElementById('teacher-setup-list');
     if (!container) return;
@@ -132,7 +143,7 @@ function renderTeacherSetup() {
                     <select id="t${idx}-subj" class="border rounded p-1.5 text-sm" onchange="updateTeacherClassOptions(${idx})">
                         <option value="">과목</option>
                     </select>
-                    <select id="t${idx}-class" class="border rounded p-1.5 text-sm">
+                    <select id="t${idx}-class" class="border rounded p-1.5 text-sm" onchange="onTeacherClassChange(${idx})">
                         <option value="">반</option>
                     </select>
                     <button onclick="addTeacherAssignment(${idx})" class="bg-indigo-600 text-white px-3 py-1.5 rounded text-sm hover:bg-indigo-700">
@@ -228,6 +239,18 @@ window.updateTeacherClassOptions = function(idx) {
             classSel.innerHTML += `<option value="${i}" ${disabled}>${label}</option>`;
         }
     }
+};
+
+// 반 선택 시 자동으로 과목 배정을 추가
+window.onTeacherClassChange = function(idx) {
+    const gradeSel = document.getElementById(`t${idx}-grade`);
+    const subjSel = document.getElementById(`t${idx}-subj`);
+    const classSel = document.getElementById(`t${idx}-class`);
+    
+    if (!gradeSel || !subjSel || !classSel) return;
+    if (!gradeSel.value || !subjSel.value || !classSel.value) return;
+    
+    addTeacherAssignment(idx);
 };
 
 window.addTeacherAssignment = function(idx) {
