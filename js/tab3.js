@@ -355,17 +355,7 @@ window.clickCell = function(r, c) {
         return;
     }
     
-    // 현재 셀에 전담 과목이 있는지 확인
-    const currentVal = state.timetables[k] ? state.timetables[k][r][c] : '';
-    if (currentVal) {
-        const jList = getGradeAllocations(gr);
-        if (jList.some(x => x.startsWith(currentVal))) {
-            showAlert('전담 과목은 수정할 수 없습니다.<br>전담 시간표에서 수정하세요.');
-            return;
-        }
-    }
-    
-    // 선택한 과목이 전담 과목인지 확인 (전담 과목도 이제 선택 가능하므로 이 체크 제거)
+    // 전담 과목 입력 제한 제거 - 이제 전담 과목도 자유롭게 입력 가능
     
     if(editorState.selectedSubj) {
         // 목표 시수 확인
