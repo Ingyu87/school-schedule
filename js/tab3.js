@@ -187,8 +187,8 @@ function renderPalette() {
         let cur = countUse(k, name);
         let active = editorState.selectedSubj === name ? 'active' : '';
         let st = cur >= tgt ? 'done' : '';
-        // 전담 과목은 클릭 불가 (읽기 전용)
-        pj.innerHTML += `<div class="palette-item ${active} opacity-60 cursor-not-allowed" title="전담 과목은 전담 시간표에서 배정하세요"><span class="text-sm font-bold">${name}</span><span class="count-badge ${st}">${cur}/${tgt}</span></div>`;
+        // 전담 과목도 학급 시간표에서 선택 가능 (단, 전담/시설 배정 시간은 여전히 잠금)
+        pj.innerHTML += `<div class="palette-item ${active}" onclick="selSubj('${name}')"><span class="text-sm font-bold">${name}</span><span class="count-badge ${st}">${cur}/${tgt}</span></div>`;
     });
 
     const pd = document.getElementById('palette-damim'); 
