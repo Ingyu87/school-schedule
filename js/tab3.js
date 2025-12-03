@@ -181,6 +181,20 @@ function renderPalette() {
     
     pj.innerHTML = '';
     let jList = getGradeAllocations(gr);
+    
+    // 특수부장 과목도 전담 과목 목록에 추가
+    const gradeNum = parseInt(gr);
+    const classNum = parseInt(k.split('-')[1]);
+    (state.specialSupport || []).forEach(sp => {
+        if (sp.grade == gradeNum && sp.classNum == classNum) {
+            // 이미 전담 과목 목록에 있는지 확인 (같은 과목이 일반 전담으로도 있는 경우)
+            const exists = jList.some(s => s.split('(')[0] === sp.subject);
+            if (!exists) {
+                jList.push(`${sp.subject}(${sp.hours})`);
+            }
+        }
+    });
+    
     jList.forEach(s => {
         let name = s.split('(')[0];
         let tgt = parseFloat(s.match(/\(([\d.]+)\)/)?.[1] || 0);

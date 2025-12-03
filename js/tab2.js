@@ -75,6 +75,19 @@ window.addSpecialSupport = function() {
     
     state.specialSupport.push({ grade: gradeNum, classNum: parseInt(classNum), subject, hours });
     saveData({ specialSupport: state.specialSupport });
+    
+    // 모든 전담 교사 배정 폼의 과목 드롭다운 업데이트 (특수부장 과목 반영)
+    state.teachers.forEach((t, idx) => {
+        const gradeSel = document.getElementById(`t${idx}-grade`);
+        if (gradeSel && gradeSel.value == gradeNum) {
+            updateTeacherSubjectOptions(idx);
+            const subjSel = document.getElementById(`t${idx}-subj`);
+            if (subjSel && subjSel.value) {
+                updateTeacherClassOptions(idx);
+            }
+        }
+    });
+    
     renderTab2();
 };
 
