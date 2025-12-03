@@ -306,9 +306,12 @@ window.addTeacherAssignment = function(idx) {
             updateTeacherSubjectOptions(idx);
             setTimeout(() => {
                 const subjSelAgain = document.getElementById(`t${idx}-subj`);
+                const classSelAgain = document.getElementById(`t${idx}-class`);
                 if (subjSelAgain) {
                     subjSelAgain.value = prevSubj;
                     updateTeacherClassOptions(idx);
+                    // 반은 다시 선택할 수 있도록 비워 줌
+                    if (classSelAgain) classSelAgain.value = '';
                 }
             }, 0);
         }
