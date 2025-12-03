@@ -528,6 +528,49 @@ window.selectTeacherClass = function(teacherIdx, classKey, subject) {
     }
 };
 
+// 전담 시간표 셀 직접 입력 처리
+window.onTeacherCellInput = function(teacherIdx, r, c, value) {
+    const t = state.teachers[teacherIdx];
+    if (!t.schedule) t.schedule = grid(6,5);
+    
+    // 입력값 파싱
+    const entries = parseScheduleEntries(value);
+    
+    // 각 엔트리에 대해 과목 자동 추가
+    const updatedEntries = entries.map(entry => {
+        if (entry.subject) return entry; // 이미 과목이 있으면 그대로
+        
+        // 해당 반에 배정된 과목 찾기
+        const assignment = (t.assignments || []).find(a => {
+            const displaySubj = a.subject.replace('[특수]', '');
+            return a.grade == parseInt(entry.classKey.split('-')[0]) && 
+                   a.classNum == parseInt(entry.classKey.split('-')[1]);
+        });
+        
+        if (assignment) {
+            const displaySubj = assignment.subject.replace('[특수]', '');
+            return { classKey: entry.classKey, subject: displaySubj };
+        }
+        
+        return entry;
+    });
+    
+    t.schedule[r][c] = updatedEntries.length ? formatScheduleEntries(updatedEntries) : '';
+    saveData({teachers: state.teachers});
+    
+    const savedClass = selectedTeacherClass.classKey;
+    const savedSubj = selectedTeacherClass.subject;
+    const savedTeacher = selectedTeacherClass.teacherIdx;
+    
+    renderTeacherTimetables();
+    
+    if (savedClass && savedSubj) {
+        setTimeout(() => {
+            selectTeacherClass(savedTeacher, savedClass, savedSubj);
+        }, 0);
+    }
+};
+
 window.clickTeacherCell = function(teacherIdx, r, c, event) {
     const t = state.teachers[teacherIdx];
     if (!t.schedule) t.schedule = grid(6,5);

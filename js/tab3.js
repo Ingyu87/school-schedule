@@ -365,17 +365,34 @@ window.clickCell = function(r, c) {
         }
     }
     
-    // 선택한 과목이 전담 과목인지 확인
-    if (editorState.selectedSubj) {
+    // 선택한 과목이 전담 과목인지 확인 (전담 과목도 이제 선택 가능하므로 이 체크 제거)
+    
+    if(editorState.selectedSubj) {
+        // 목표 시수 확인
         const jList = getGradeAllocations(gr);
-        if (jList.some(x => x.startsWith(editorState.selectedSubj))) {
-            showAlert('전담 과목은 직접 입력할 수 없습니다.<br>전담 시간표에서 배정하세요.');
+        const isJeondam = jList.some(x => x.startsWith(editorState.selectedSubj));
+        let targetHours = 0;
+        
+        if (isJeondam) {
+            const alloc = jList.find(x => x.startsWith(editorState.selectedSubj));
+            targetHours = parseFloat(alloc.match(/\(([\d.]+)\)/)?.[1] || 0);
+        } else {
+            targetHours = state.curriculum[gr]?.[editorState.selectedSubj] || 0;
+        }
+        
+        const currentHours = countUse(k, editorState.selectedSubj);
+        
+        // 목표 시수에 도달했으면 더 이상 입력 불가
+        if (currentHours >= targetHours && targetHours > 0) {
+            showAlert(`${editorState.selectedSubj}은(는) 이미 ${targetHours}시간이 모두 배정되었습니다.`);
             return;
         }
+        
+        state.timetables[k][r][c] = editorState.selectedSubj;
+    } else {
+        state.timetables[k][r][c] = '';
     }
     
-    if(editorState.selectedSubj) state.timetables[k][r][c] = editorState.selectedSubj;
-    else state.timetables[k][r][c] = '';
     renderEditorGrid(); 
     renderPalette();
     saveData({timetables: state.timetables});
