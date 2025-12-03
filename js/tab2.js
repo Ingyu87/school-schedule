@@ -254,17 +254,8 @@ window.updateTeacherClassOptions = function(idx) {
     }
 };
 
-// 반 선택 시 자동으로 과목 배정을 추가
-window.onTeacherClassChange = function(idx) {
-    const gradeSel = document.getElementById(`t${idx}-grade`);
-    const subjSel = document.getElementById(`t${idx}-subj`);
-    const classSel = document.getElementById(`t${idx}-class`);
-    
-    if (!gradeSel || !subjSel || !classSel) return;
-    if (!gradeSel.value || !subjSel.value || !classSel.value) return;
-    
-    addTeacherAssignment(idx);
-};
+// 반 선택 시 자동 추가 기능 제거 - 추가 버튼을 눌러야만 반영됨
+// window.onTeacherClassChange 함수 제거됨
 
 window.addTeacherAssignment = function(idx) {
     const gradeSel = document.getElementById(`t${idx}-grade`);
@@ -304,16 +295,18 @@ window.addTeacherAssignment = function(idx) {
     
     saveData({ teachers: state.teachers });
     
-    // 이전 선택 값 저장
+    // 이전 선택 값 저장 (리셋하지 않고 유지)
     const prevGrade = gradeNum;
     const prevSubj = subjVal;
+    const prevClass = classNum;
     
     renderTab2();
     
-    // 이전 선택 값 복원
+    // 이전 선택 값 모두 복원 (리셋하지 않음)
     setTimeout(() => {
         const newGradeSel = document.getElementById(`t${idx}-grade`);
         const newSubjSel = document.getElementById(`t${idx}-subj`);
+        const newClassSel = document.getElementById(`t${idx}-class`);
         if (newGradeSel) {
             newGradeSel.value = prevGrade;
             updateTeacherSubjectOptions(idx);
@@ -323,8 +316,12 @@ window.addTeacherAssignment = function(idx) {
                 if (subjSelAgain) {
                     subjSelAgain.value = prevSubj;
                     updateTeacherClassOptions(idx);
-                    // 반은 다시 선택할 수 있도록 비워 줌
-                    if (classSelAgain) classSelAgain.value = '';
+                    setTimeout(() => {
+                        // 반도 유지 (리셋하지 않음)
+                        if (classSelAgain) {
+                            classSelAgain.value = prevClass;
+                        }
+                    }, 0);
                 }
             }, 0);
         }
