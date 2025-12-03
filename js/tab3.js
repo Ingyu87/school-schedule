@@ -149,14 +149,8 @@ function renderEditorGrid() {
                 isFixed = true;  // 전담 시간표에서 배정된 것은 수정 불가
             } else if (v) {
                 txt = v;
-            const jList = getGradeAllocations(gr);
-                // 전담 과목인지 확인
-                if(jList.some(x => x.startsWith(v))) {
-                    cls += 'cell-jeondam';
-                    isFixed = true;  // 전담 과목은 수정 불가
-                } else {
-                    cls += 'cell-damim';
-                }
+                // 전담 교사/시설이 아닌 기존 값은 모두 담임 과목으로 취급 (수정 가능)
+                cls += 'cell-damim';
             } else {
                 cls += 'bg-white';
             }
@@ -203,14 +197,12 @@ function renderPalette() {
     pd.innerHTML = '';
     let subjs = state.curriculum[gr] || {};
     Object.keys(subjs).forEach(s => {
-        if(!jList.some(x => x.startsWith(s))) {
-            let tgt = subjs[s];
-            if(tgt > 0) {
-                let cur = countUse(k, s);
-                let active = editorState.selectedSubj === s ? 'active' : '';
-                let st = cur >= tgt ? 'done' : '';
-                pd.innerHTML += `<div class="palette-item ${active}" onclick="selSubj('${s}')"><span class="text-sm">${s}</span><span class="count-badge ${st}">${cur}/${tgt}</span></div>`;
-            }
+        let tgt = subjs[s];
+        if(tgt > 0) {
+            let cur = countUse(k, s);
+            let active = editorState.selectedSubj === s ? 'active' : '';
+            let st = cur >= tgt ? 'done' : '';
+            pd.innerHTML += `<div class="palette-item ${active}" onclick="selSubj('${s}')"><span class="text-sm">${s}</span><span class="count-badge ${st}">${cur}/${tgt}</span></div>`;
         }
     });
 }
