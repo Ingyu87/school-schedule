@@ -145,13 +145,8 @@ function renderTeacherSetup() {
                 <div class="flex flex-wrap mb-3 min-h-[32px]">${badges || '<span class="text-gray-400 text-sm">배정된 과목 없음</span>'}</div>
                 
                 <div class="border-t pt-3">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-xs font-bold text-gray-600">배정할 과목 선택 (여러 개 선택 가능)</span>
-                        <button onclick="addTeacherAssignments(${idx})" class="bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700">
-                            <i class="fa-solid fa-plus mr-1"></i>선택 항목 추가
-                        </button>
-                    </div>
-                    <div id="t${idx}-assignments" class="max-h-48 overflow-y-auto border rounded p-2 bg-gray-50 grid grid-cols-1 gap-1"></div>
+                    <div class="text-xs font-bold text-gray-600 mb-2">배정할 과목 클릭 (학급 시간표처럼)</div>
+                    <div id="t${idx}-assignments" class="max-h-48 overflow-y-auto border rounded p-2 bg-gray-50 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1"></div>
                 </div>
             </div>`;
     });
@@ -201,11 +196,11 @@ function populateTeacherAssignmentOptions(idx) {
                     `${gradeNum}-${c} ${subjName} (${hours}h)`;
                 
                 container.innerHTML += `
-                    <label class="flex items-center gap-2 p-1 hover:bg-white rounded cursor-pointer ${opacityClass}">
-                        <input type="checkbox" value="${key}" data-hours="${hours}" ${disabled} 
-                               class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                        <span class="text-sm">${label}</span>
-                    </label>`;
+                    <button onclick="toggleTeacherAssignment(${idx}, '${key}', ${hours}, false)" ${disabled}
+                            data-key="${key}"
+                            class="text-left p-2 text-xs border rounded hover:bg-indigo-50 transition-colors ${opacityClass} ${isAssigned ? 'bg-gray-200 cursor-not-allowed' : 'bg-white'}">
+                        ${label}
+                    </button>`;
             }
         });
         
@@ -221,11 +216,11 @@ function populateTeacherAssignmentOptions(idx) {
                     `⭐${gradeNum}-${sp.classNum} ${sp.subject} (${sp.hours}h)`;
                 
                 container.innerHTML += `
-                    <label class="flex items-center gap-2 p-1 hover:bg-white rounded cursor-pointer ${opacityClass}">
-                        <input type="checkbox" value="${key}" data-hours="${sp.hours}" data-special="true" ${disabled}
-                               class="rounded border-gray-300 text-yellow-600 focus:ring-yellow-500">
-                        <span class="text-sm">${label}</span>
-                    </label>`;
+                    <button onclick="toggleTeacherAssignment(${idx}, '${key}', ${sp.hours}, true)" ${disabled}
+                            data-key="${key}"
+                            class="text-left p-2 text-xs border rounded hover:bg-yellow-50 transition-colors ${opacityClass} ${isAssigned ? 'bg-gray-200 cursor-not-allowed' : 'bg-white'}">
+                        ${label}
+                    </button>`;
             }
         });
     });
@@ -325,37 +320,27 @@ window.updateTeacherClassOptions = function(idx) {
 // 반 선택 시 자동 추가 기능 제거 - 추가 버튼을 눌러야만 반영됨
 // window.onTeacherClassChange 함수 제거됨
 
-window.addTeacherAssignments = function(idx) {
-    const container = document.getElementById(`t${idx}-assignments`);
-    if (!container) return;
+window.toggleTeacherAssignment = function(idx, key, hours, isSpecial) {
+    // 값 파싱: "3-1-영어" 또는 "4-2-[특수]과학"
+    const parts = key.split('-');
+    if (parts.length < 3) return;
     
-    const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
-    if (checkboxes.length === 0) {
-        showAlert('배정할 과목을 선택하세요.');
-        return;
-    }
+    const gradeNum = parseInt(parts[0]);
+    const classNum = parseInt(parts[1]);
+    const subjVal = parts.slice(2).join('-'); // "[특수]" 포함 가능
     
     if (!state.teachers[idx].assignments) state.teachers[idx].assignments = [];
     
-    let addedCount = 0;
+    // 이미 배정되어 있는지 확인
+    const existingIdx = state.teachers[idx].assignments.findIndex(a => 
+        a.grade == gradeNum && a.classNum == classNum && a.subject === subjVal
+    );
     
-    checkboxes.forEach(checkbox => {
-        // 값 파싱: "3-1-영어" 또는 "4-2-[특수]과학"
-        const parts = checkbox.value.split('-');
-        if (parts.length < 3) return;
-        
-        const gradeNum = parseInt(parts[0]);
-        const classNum = parseInt(parts[1]);
-        const subjVal = parts.slice(2).join('-'); // "[특수]" 포함 가능
-        const hours = parseFloat(checkbox.dataset.hours) || 0;
-        const isSpecial = checkbox.dataset.special === 'true';
-        
-        // 중복 체크
-        const exists = state.teachers[idx].assignments.some(a => 
-            a.grade == gradeNum && a.classNum == classNum && a.subject === subjVal
-        );
-        if (exists) return;
-        
+    if (existingIdx >= 0) {
+        // 이미 있으면 제거
+        state.teachers[idx].assignments.splice(existingIdx, 1);
+    } else {
+        // 없으면 추가
         state.teachers[idx].assignments.push({
             grade: gradeNum,
             classNum: classNum,
@@ -363,18 +348,11 @@ window.addTeacherAssignments = function(idx) {
             hours: hours,
             isSpecial: isSpecial
         });
-        
-        addedCount++;
-    });
-    
-    if (addedCount === 0) {
-        showAlert('이미 추가된 항목입니다.');
-        return;
     }
     
     saveData({ teachers: state.teachers });
     
-    // 체크박스 목록 다시 채우기 (배정된 항목 disabled 처리)
+    // 버튼 목록 다시 채우기 (배정된 항목 표시)
     populateTeacherAssignmentOptions(idx);
     
     // renderTab2() 대신 필요한 부분만 업데이트
