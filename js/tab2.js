@@ -3,7 +3,7 @@
 function renderTab2() {
     renderSpecialSupport();
     renderTeacherSetup();
-    renderTeacherTimetables();
+    // renderTeacherTimetables는 버튼 클릭 시에만 표시
 }
 
 function renderSpecialSupport() {
@@ -139,6 +139,9 @@ function renderTeacherSetup() {
                            value="${t.name}" onchange="updTName(${idx},this.value)">
                     <div class="flex items-center gap-2">
                         <span class="text-sm font-bold px-2 py-1 rounded ${statusClass}">${totalHours}/21시간</span>
+                        <button onclick="toggleTeacherTimetable(${idx})" class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+                            <i class="fa-solid fa-calendar mr-1"></i>시간표
+                        </button>
                         <button onclick="removeTeacher(${idx})" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 </div>
@@ -804,5 +807,147 @@ window.resetTeacherSchedule = function(idx) {
         saveData({ teachers: state.teachers });
         renderTeacherTimetables();
     });
+};
+
+// 교사 시간표 토글 (모달로 표시)
+window.toggleTeacherTimetable = function(idx) {
+    const t = state.teachers[idx];
+    if (!t) return;
+    
+    // 기존 모달이 있으면 제거
+    const existing = document.getElementById('teacher-timetable-modal');
+    if (existing) existing.remove();
+    
+    // 모달 생성
+    const modal = document.createElement('div');
+    modal.id = 'teacher-timetable-modal';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+    modal.onclick = (e) => {
+        if (e.target === modal) modal.remove();
+    };
+    
+    // 시간표 렌더링
+    if (!t.schedule || !Array.isArray(t.schedule)) {
+        t.schedule = grid(6,5);
+    }
+    
+    // 배정된 반-과목별 시수 계산
+    const classHours = {};
+    (t.assignments || []).forEach(a => {
+        const displaySubj = a.subject.replace('[특수]', '');
+        if (displaySubj.includes('보건')) return;
+        
+        const classKey = `${a.grade}-${a.classNum}`;
+        if (!classHours[classKey]) classHours[classKey] = {};
+        classHours[classKey][displaySubj] = { 
+            target: a.hours, 
+            current: 0,
+            isSpecial: a.isSpecial 
+        };
+    });
+    
+    // 현재 시간표에서 시수 카운트
+    if (t.schedule) {
+        t.schedule.forEach(row => {
+            row.forEach(cell => {
+                if (!cell) return;
+                const entries = parseScheduleEntries(cell);
+                entries.forEach(entry => {
+                    const classKey = entry.classKey;
+                    const subjects = classHours[classKey];
+                    if (!subjects) return;
+                    if (entry.subject && subjects[entry.subject]) {
+                        subjects[entry.subject].current++;
+                    } else {
+                        const keys = Object.keys(subjects);
+                        if (!keys.length) return;
+                        const targetSubj = keys.find(subj => subjects[subj].current < subjects[subj].target) || keys[0];
+                        subjects[targetSubj].current++;
+                    }
+                });
+            });
+        });
+    }
+    
+    const targetHrs = (t.assignments || []).reduce((sum, a) => sum + (a.hours || 0), 0);
+    let scheduleHrs = 0;
+    Object.keys(classHours).forEach(classKey => {
+        Object.values(classHours[classKey]).forEach(ch => {
+            scheduleHrs += ch.current;
+        });
+    });
+    
+    // 팔레트 HTML
+    let paletteHtml = '';
+    Object.keys(classHours).sort().forEach(classKey => {
+        const subjects = classHours[classKey];
+        Object.keys(subjects).sort().forEach(subj => {
+            const ch = subjects[subj];
+            const isDone = ch.current >= ch.target;
+            const isOver = ch.current > ch.target;
+            const bgClass = isOver ? 'bg-red-100 text-red-700 border-red-300' : 
+                           isDone ? 'bg-green-100 text-green-700 border-green-300' : 
+                           'bg-gray-50 text-gray-700 border-gray-200';
+            const icon = ch.isSpecial ? '⭐' : '';
+            paletteHtml += `
+                <div class="inline-flex items-center px-2 py-1 rounded border text-xs ${bgClass} cursor-pointer hover:opacity-80 mb-1" 
+                     onclick="selectTeacherClass(${idx}, '${classKey}', '${subj}')" 
+                     title="${subj}">
+                    ${icon}<span class="font-bold">${classKey}</span> <span class="text-gray-600 ml-1">${subj}</span> <span class="ml-1 font-bold">${ch.current}/${ch.target}</span>
+                </div>`;
+        });
+    });
+    
+    // 시간표 그리드 HTML
+    const classPeriodLabels = ["1교시","2교시","3교시","4교시","5교시","6교시"];
+    let gridHtml = '';
+    for(let r = 0; r < 6; r++) {
+        gridHtml += `<tr><td class="bg-gray-50 font-bold text-xs p-2">${classPeriodLabels[r]}</td>`;
+        for(let c = 0; c < 5; c++) {
+            const val = t.schedule[r][c] || '';
+            gridHtml += `<td class="h-12 border cursor-pointer hover:bg-indigo-50" onclick="clickTeacherCell(${idx}, ${r}, ${c})">
+                <div class="w-full h-full text-center text-sm font-medium flex items-center justify-center">${val || ''}</div>
+            </td>`;
+        }
+        gridHtml += '</tr>';
+    }
+    
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-auto" onclick="event.stopPropagation()">
+            <div class="sticky top-0 bg-white border-b p-4 flex justify-between items-center z-10">
+                <div>
+                    <h3 class="text-xl font-bold">${t.name} 시간표</h3>
+                    <span class="text-sm ${scheduleHrs>=targetHrs && targetHrs > 0 ?'text-green-600':'text-orange-600'}">${scheduleHrs}/${targetHrs}시간</span>
+                </div>
+                <button onclick="document.getElementById('teacher-timetable-modal').remove()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa-solid fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div class="p-4 flex gap-4">
+                <div class="flex-1">
+                    <table class="w-full border-collapse border">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border p-2 w-16">교시</th>
+                                <th class="border p-2">월</th>
+                                <th class="border p-2">화</th>
+                                <th class="border p-2">수</th>
+                                <th class="border p-2">목</th>
+                                <th class="border p-2">금</th>
+                            </tr>
+                        </thead>
+                        <tbody>${gridHtml}</tbody>
+                    </table>
+                </div>
+                <div class="w-64 border-l pl-4">
+                    <div class="text-xs font-bold text-gray-600 mb-2">📋 담당 반 (클릭하여 입력)</div>
+                    <div id="teacher-palette-${idx}" class="flex flex-col gap-1">
+                        ${paletteHtml || '<span class="text-gray-400 text-xs">배정된 반 없음</span>'}
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    
+    document.body.appendChild(modal);
 };
 
