@@ -425,7 +425,6 @@ function renderTeacherTimetables() {
             for(let c = 0; c < 5; c++) {
                 const val = t.schedule[r][c] || '';
                 const parsedEntries = parseScheduleEntries(val);
-                const displayVal = parsedEntries.length ? parsedEntries.map(entry => formatScheduleEntry(entry.classKey, entry.subject)).join('/') : '';
                 
                 // 해당 셀에 입력된 반이 초과인지 확인 (과목별로)
                 let cellClass = '';
@@ -440,9 +439,19 @@ function renderTeacherTimetables() {
                     });
                     if (hasOverflow) cellClass = 'bg-red-50';
                 }
-                gridHtml += `<td class="${cellClass} cursor-pointer hover:bg-indigo-50 h-9" 
-                    onclick="clickTeacherCell(${idx},${r},${c},event)">
-                    <span class="block w-full text-center text-sm font-medium">${displayVal || '-'}</span>
+                gridHtml += `<td class="${cellClass} h-9">
+                    <input 
+                        type="text"
+                        value="${val}"
+                        class="w-full h-9 text-center text-sm font-medium bg-transparent border-none focus:outline-none"
+                        data-grid="teacher-${idx}"
+                        data-row="${r}"
+                        data-col="${c}"
+                        onfocus="handleGridFocus(event)"
+                        onclick="handleGridClick(event)"
+                        onkeydown="handleGridKeydown(event, 'teacher-${idx}', ${r}, ${c}, 6, 5)"
+                        onchange="onTeacherCellInput(${idx},${r},${c}, this.value)"
+                    />
                 </td>`;
             }
             gridHtml += '</tr>';
@@ -599,6 +608,15 @@ window.clickTeacherCell = function(teacherIdx, r, c, event) {
             selectTeacherClass(savedTeacher, savedClass, savedSubj);
         }, 0);
     }
+};
+
+// 직접 입력으로 교사 시간표 수정
+window.onTeacherCellInput = function(teacherIdx, r, c, value) {
+    const t = state.teachers[teacherIdx];
+    if (!t.schedule) t.schedule = grid(6,5);
+    t.schedule[r][c] = value.trim();
+    saveData({ teachers: state.teachers });
+    renderTeacherTimetables();
 };
 
 
