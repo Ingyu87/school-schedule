@@ -536,20 +536,8 @@ function renderTeacherTimetables() {
                     });
                     if (hasOverflow) cellClass = 'bg-red-50';
                 }
-                gridHtml += `<td class="${cellClass} h-9">
-                    <input 
-                        type="text"
-                        value="${val}"
-                        class="w-full h-9 text-center text-sm font-medium bg-transparent border-none focus:outline-none"
-                        data-grid="teacher-${idx}"
-                        data-row="${r}"
-                        data-col="${c}"
-                        onfocus="handleGridFocus(event)"
-                        onclick="handleGridClick(event)"
-                        oninput="fmtTeacher(this)"
-                        onkeydown="handleGridKeydown(event, 'teacher-${idx}', ${r}, ${c}, 6, 5)"
-                        onchange="onTeacherCellInput(${idx},${r},${c}, this.value)"
-                    />
+                gridHtml += `<td class="${cellClass} h-9 cursor-pointer hover:bg-indigo-50" onclick="clickTeacherCell(${idx}, ${r}, ${c})">
+                    <div class="w-full h-9 text-center text-sm font-medium flex items-center justify-center">${val || ''}</div>
                 </td>`;
             }
             gridHtml += '</tr>';
@@ -594,6 +582,10 @@ let selectedTeacherClass = { teacherIdx: null, classKey: null, subject: null };
 
 window.selectTeacherClass = function(teacherIdx, classKey, subject) {
     selectedTeacherClass = { teacherIdx, classKey, subject };
+    
+    // 선택 상태 저장 (렌더링 후에도 유지)
+    if (!window.teacherPaletteSelections) window.teacherPaletteSelections = {};
+    window.teacherPaletteSelections[teacherIdx] = { classKey, subject };
     
     // 모든 팔레트 아이템 선택 해제
     document.querySelectorAll('[id^="teacher-palette-"] > div').forEach(el => {
@@ -738,15 +730,13 @@ window.clickTeacherCell = function(teacherIdx, r, c, event) {
     
     saveData({teachers: state.teachers});
     
-    const savedClass = selectedTeacherClass.classKey;
-    const savedSubj = selectedTeacherClass.subject;
-    const savedTeacher = selectedTeacherClass.teacherIdx;
-    
+    // 선택 상태 유지하면서 렌더링
     renderTeacherTimetables();
     
-    if (savedClass && savedSubj) {
+    // 선택 상태 복원
+    if (selectedTeacherClass.teacherIdx !== null && selectedTeacherClass.classKey) {
         setTimeout(() => {
-            selectTeacherClass(savedTeacher, savedClass, savedSubj);
+            selectTeacherClass(selectedTeacherClass.teacherIdx, selectedTeacherClass.classKey, selectedTeacherClass.subject);
         }, 0);
     }
 };

@@ -292,8 +292,42 @@ function countUse(k, s) {
 }
 
 window.selSubj = function(s) { 
-    editorState.selectedSubj = s; 
-    renderPalette(); 
+    // 같은 과목을 다시 클릭하면 선택 해제
+    if (editorState.selectedSubj === s) {
+        editorState.selectedSubj = null;
+    } else {
+        editorState.selectedSubj = s;
+    }
+    
+    // 팔레트 재렌더링하지 않고 CSS 클래스만 업데이트
+    const paletteJeondam = document.getElementById('palette-jeondam');
+    const paletteDamim = document.getElementById('palette-damim');
+    
+    if (paletteJeondam) {
+        paletteJeondam.querySelectorAll('.palette-item').forEach(item => {
+            item.classList.remove('active');
+        });
+    }
+    if (paletteDamim) {
+        paletteDamim.querySelectorAll('.palette-item').forEach(item => {
+            item.classList.remove('active');
+        });
+    }
+    
+    // 선택된 과목에 active 클래스 추가
+    if (editorState.selectedSubj) {
+        const allItems = [
+            ...(paletteJeondam ? paletteJeondam.querySelectorAll('.palette-item') : []),
+            ...(paletteDamim ? paletteDamim.querySelectorAll('.palette-item') : [])
+        ];
+        
+        allItems.forEach(item => {
+            const subjName = item.querySelector('span')?.textContent;
+            if (subjName === editorState.selectedSubj) {
+                item.classList.add('active');
+            }
+        });
+    }
 };
 
 function getFacilityRow(classRow, gradeNum) {
