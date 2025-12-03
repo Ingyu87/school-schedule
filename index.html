@@ -247,7 +247,7 @@
                                 <div class="space-x-2">
                                     <button onclick="resetClassTimetable()" class="bg-gray-100 text-gray-600 px-3 py-1.5 rounded text-sm font-bold hover:bg-gray-200"><i class="fa-solid fa-rotate-left mr-1"></i>초기화</button>
                                     <button onclick="autoFill()" class="bg-pink-100 text-pink-700 px-3 py-1.5 rounded text-sm font-bold hover:bg-pink-200"><i class="fa-solid fa-magic mr-1"></i>자동채우기</button>
-                                    <button onclick="downloadExcel()" class="bg-green-600 text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-green-700"><i class="fa-solid fa-file-excel mr-1"></i>저장</button>
+                                    <button id="class-save-btn" onclick="downloadExcel()" disabled class="bg-green-600 text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed"><i class="fa-solid fa-file-excel mr-1"></i>저장</button>
                                 </div>
                             </div>
                             <div class="flex-1 border rounded-lg overflow-hidden">

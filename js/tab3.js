@@ -640,9 +640,17 @@ function renderClassCompletionPanel() {
 
 function updateClassCompletionCheckbox() {
     const checkbox = document.getElementById('current-class-completed');
+    const saveBtn = document.getElementById('class-save-btn');
+    
     if (!checkbox || !editorState.classKey) return;
     
-    checkbox.checked = state.timetableCompletion[editorState.classKey] || false;
+    const isCompleted = state.timetableCompletion[editorState.classKey] || false;
+    checkbox.checked = isCompleted;
+    
+    // 저장 버튼 활성화/비활성화
+    if (saveBtn) {
+        saveBtn.disabled = !isCompleted;
+    }
 }
 
 window.toggleClassCompletion = function() {

@@ -166,7 +166,7 @@ function renderTeacherSetup() {
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="text-sm font-bold px-2 py-1 rounded ${statusClass}">${totalHours}/21시간</span>
-                        <button onclick="downloadTeacherExcel(${idx})" class="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600" title="시간표 저장">
+                        <button onclick="downloadTeacherExcel(${idx})" ${t.completed ? '' : 'disabled'} class="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed" title="시간표 저장 (완료 후 활성화)">
                             <i class="fa-solid fa-file-excel mr-1"></i>저장
                         </button>
                         <label class="flex items-center cursor-pointer bg-green-50 border border-green-300 px-3 py-1 rounded text-sm hover:bg-green-100">
