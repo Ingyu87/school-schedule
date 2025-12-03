@@ -1,0 +1,26 @@
+{
+  "name": "school-scheduler",
+  "version": "1.0.0",
+  "description": "가동초 스마트 스케줄러 2026 - 학교 시간표 관리 시스템",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx serve . -l 3000"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "keywords": [
+    "school",
+    "scheduler",
+    "timetable",
+    "korea",
+    "education"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {}
+}
+
+

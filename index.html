@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가동초 스마트 스케줄러 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-[#f3f4f6] h-screen flex flex-col overflow-hidden">
+    <!-- Top Bar -->
+    <header class="bg-white border-b border-gray-200 z-30 shrink-0">
+        <div class="max-w-[1800px] mx-auto px-4 h-14 flex items-center justify-between">
+            <div class="flex items-center gap-2 mr-8">
+                <i class="fa-solid fa-school text-indigo-600 text-xl"></i>
+                <h1 class="text-lg font-bold text-gray-900 whitespace-nowrap">가동초 스마트 스케줄러 2026</h1>
+                <span id="sync-indicator" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-500 ml-2">
+                    <i class="fa-solid fa-cloud"></i> 대기중
+                </span>
+            </div>
+            <div class="flex space-x-1 overflow-x-auto scrollbar-hide">
+                <button onclick="switchTab('tab0')" id="btn-tab0" class="tab-btn active">0. 기초 설정 (통합)</button>
+                <button onclick="switchTab('tab1')" id="btn-tab1" class="tab-btn">1. 시설 시간표</button>
+                <button onclick="switchTab('tab2')" id="btn-tab2" class="tab-btn">2. 교과전담 교사별 시간표</button>
+                <button onclick="switchTab('tab3')" id="btn-tab3" class="tab-btn">3. 학급 시간표</button>
+            </div>
+            <div></div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-4">
+        <div class="max-w-[1800px] mx-auto space-y-6">
+            <!-- TAB 0: 기초 설정 -->
+            <div id="tab0" class="space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- 1. 학급 수 설정 -->
+                    <div class="card">
+                        <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fa-solid fa-users-rectangle text-indigo-500 mr-2"></i>1. 학년별 학급 수 및 요일별 시수
+                        </h2>
+                        <table class="base-table mb-4">
+                            <thead><tr><th>학년</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>계</th></tr></thead>
+                            <tbody id="daily-counts-body"></tbody>
+                        </table>
+                        <div class="border-t pt-4">
+                            <h3 class="text-sm font-bold text-gray-700 mb-2">학급 수 설정</h3>
+                            <div class="grid grid-cols-6 gap-2" id="class-config-container"></div>
+                        </div>
+                    </div>
+                    <!-- 2. 일과 운영표 -->
+                    <div class="card">
+                        <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fa-solid fa-clock text-green-500 mr-2"></i>2. 일과 운영표
+                        </h2>
+                        <table class="base-table">
+                            <thead><tr><th class="w-16">구분</th><th>1~3학년 (점심 먼저)</th><th>4~6학년 (수업 먼저)</th></tr></thead>
+                            <tbody>
+                                <tr><td>1교시</td><td>09:00 ~ 09:40</td><td>09:00 ~ 09:40</td></tr>
+                                <tr><td>2교시</td><td>09:50 ~ 10:30</td><td>09:50 ~ 10:30</td></tr>
+                                <tr><td>3교시</td><td>10:40 ~ 11:20</td><td>10:40 ~ 11:20</td></tr>
+                                <tr><td class="font-bold text-indigo-700 bg-indigo-50">4교시</td><td class="font-bold text-indigo-700 bg-indigo-50">12:10 ~ 12:50<br><span class="text-xs font-normal text-gray-500">(점심 후)</span></td><td class="font-bold text-pink-700 bg-pink-50">11:30 ~ 12:10<br><span class="text-xs font-normal text-gray-500">(수업 후)</span></td></tr>
+                                <tr><td class="font-bold text-gray-600 bg-gray-50">점심</td><td class="bg-gray-50">11:20 ~ 12:10</td><td class="bg-gray-50">12:10 ~ 13:00</td></tr>
+                                <tr><td>5교시</td><td>13:00 ~ 13:40</td><td>13:00 ~ 13:40</td></tr>
+                                <tr><td>6교시</td><td>13:50 ~ 14:30 (3학년~)</td><td>13:50 ~ 14:30</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- 3. 교육과정 시수표 -->
+                <div class="card">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-gray-800 flex items-center"><i class="fa-solid fa-book text-pink-500 mr-2"></i>3. 학년별 교육과정 편제표 (주당 시수)</h2>
+                        <span class="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded border border-indigo-100">✏️ 수정 시 자동 저장됩니다</span>
+                    </div>
+                    <div class="overflow-x-auto"><table class="base-table"><thead><tr><th>학년</th><th>국어</th><th>수학</th><th>사회</th><th>과학</th><th>영어</th><th>음악</th><th>미술</th><th>체육</th><th>실과</th><th>도덕</th><th>통합</th><th>창체</th><th class="bg-gray-100">계</th></tr></thead><tbody id="curriculum-body"></tbody></table></div>
+                </div>
+                <!-- 4. 교과 시간 배당표 -->
+                <div class="card">
+                    <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fa-solid fa-calculator text-purple-500 mr-2"></i>4. 교과 시간 배당표
+                    </h2>
+                    <div class="overflow-x-auto">
+                        <table class="base-table text-sm">
+                            <thead>
+                                <tr>
+                                    <th class="bg-indigo-50 text-indigo-800">구분</th>
+                                    <th id="th-1">1학년<br><span class="font-normal text-gray-500" id="cls-1"></span></th>
+                                    <th id="th-2">2학년<br><span class="font-normal text-gray-500" id="cls-2"></span></th>
+                                    <th id="th-3">3학년<br><span class="font-normal text-gray-500" id="cls-3"></span></th>
+                                    <th id="th-4">4학년<br><span class="font-normal text-gray-500" id="cls-4"></span></th>
+                                    <th id="th-5">5학년<br><span class="font-normal text-gray-500" id="cls-5"></span></th>
+                                    <th id="th-6">6학년<br><span class="font-normal text-gray-500" id="cls-6"></span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="time-allocation-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 5. 학년별 교과전담 -->
+                <div class="card">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-gray-800 flex items-center">
+                            <i class="fa-solid fa-chalkboard-user text-blue-500 mr-2"></i>5. 학년별 공통 전담 과목 선택
+                        </h2>
+                        <span class="text-xs text-gray-500">위 4번 배당표의 목표 시수에 맞게 과목을 추가하세요.</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm border-collapse">
+                            <thead class="bg-gray-50 text-gray-700">
+                                <tr>
+                                    <th class="p-2 border text-center w-20">학년</th>
+                                    <th class="p-2 border text-center w-24">현재/목표</th>
+                                    <th class="p-2 border text-left">전담 과목 목록</th>
+                                    <th class="p-2 border text-center w-64">과목 추가</th>
+                                </tr>
+                            </thead>
+                            <tbody id="common-alloc-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 1: 시설 시간표 -->
+            <div id="tab1" class="hidden space-y-4">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-gray-800"><i class="fa-solid fa-basketball text-orange-500 mr-2"></i>느티홀 (체육관)</h3>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-gray-400">반 입력 (예: 6-1) | 격주: 3-1/4-1</span>
+                                <button onclick="resetFacility('gym')" class="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded">
+                                    <i class="fa-solid fa-rotate-left mr-1"></i>초기화
+                                </button>
+                            </div>
+                        </div>
+                        <table class="base-table"><thead><tr><th class="w-16">교시</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th></tr></thead><tbody id="gym-grid"></tbody></table>
+                    </div>
+                    <div class="card">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-gray-800"><i class="fa-solid fa-book-open text-green-600 mr-2"></i>글샘터 (도서관)</h3>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-gray-400">반 입력 (예: 4-3) | 격주: 5-1/6-1</span>
+                                <button onclick="resetFacility('lib')" class="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded">
+                                    <i class="fa-solid fa-rotate-left mr-1"></i>초기화
+                                </button>
+                            </div>
+                        </div>
+                        <table class="base-table"><thead><tr><th class="w-16">교시</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th></tr></thead><tbody id="lib-grid"></tbody></table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: 교과전담 교사 시간표 -->
+            <div id="tab2" class="hidden space-y-6">
+                <!-- 특수부장 지원 과목 설정 -->
+                <div class="card">
+                    <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fa-solid fa-star text-yellow-500 mr-2"></i>특수부장 지원 과목 설정
+                    </h2>
+                    <p class="text-sm text-gray-500 mb-3">특수부장이 담당하는 추가 과목을 설정하세요. (학년-반-과목-시수)</p>
+                    <div class="flex flex-wrap gap-2 mb-3" id="special-support-list"></div>
+                    <div class="flex gap-2 items-center flex-wrap">
+                        <select id="special-grade-sel" class="border rounded p-2 text-sm" onchange="updateSpecialClassOptions()">
+                            <option value="">학년</option>
+                            <option value="3">3학년</option>
+                            <option value="4">4학년</option>
+                            <option value="5">5학년</option>
+                            <option value="6">6학년</option>
+                        </select>
+                        <select id="special-class-sel" class="border rounded p-2 text-sm">
+                            <option value="">반</option>
+                        </select>
+                        <select id="special-subj-sel" class="border rounded p-2 text-sm">
+                            <option value="">과목</option>
+                        </select>
+                        <input id="special-hrs-input" type="number" min="0.5" step="0.5" value="1" class="border rounded p-2 text-sm w-16 text-center" placeholder="시수">
+                        <button onclick="addSpecialSupport()" class="bg-yellow-500 text-white px-3 py-2 rounded text-sm hover:bg-yellow-600">
+                            <i class="fa-solid fa-plus mr-1"></i>추가
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 전담 교사 설정 -->
+                <div class="card bg-indigo-50 border-indigo-200">
+                    <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+                        <div>
+                            <h2 class="text-lg font-bold text-indigo-900">전담 교사 과목 배정</h2>
+                            <p class="text-sm text-indigo-700">학년 → 과목 → 담당 반을 선택하세요. (목표: 주 21시간)</p>
+                        </div>
+                        <button onclick="addTeacher()" class="bg-white border border-indigo-300 text-indigo-700 px-3 py-1.5 rounded text-sm hover:bg-indigo-100 font-bold shadow-sm">
+                            <i class="fa-solid fa-user-plus mr-1"></i>교사 추가
+                        </button>
+                    </div>
+                    <div id="teacher-setup-list" class="space-y-4"></div>
+                </div>
+
+                <!-- 교사별 시간표 입력 -->
+                <div class="card">
+                    <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fa-solid fa-calendar-days text-blue-500 mr-2"></i>교사별 시간표 입력
+                    </h2>
+                    <p class="text-sm text-gray-500 mb-4">오른쪽 팔레트에서 반을 클릭 후 시간표 셀을 클릭하거나, 직접 입력하세요. (예: 3-1)</p>
+                    <div id="teacher-timetables-view" class="grid grid-cols-1 xl:grid-cols-2 gap-6"></div>
+                </div>
+            </div>
+
+            <!-- TAB 3: 학급 시간표 -->
+            <div id="tab3" class="hidden h-full">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
+                    <div class="lg:col-span-3 flex flex-col gap-4">
+                        <div class="card flex-1 flex flex-col">
+                            <div class="flex justify-between items-center mb-4">
+                                <div class="flex items-center gap-3"><h2 class="text-lg font-bold text-gray-800">📅 학급 시간표</h2><select id="editor-class-select" onchange="loadEditor(this.value)" class="border-2 border-indigo-200 rounded px-3 py-1 text-lg font-bold text-indigo-700 outline-none focus:border-indigo-500"></select></div>
+                                <div class="space-x-2">
+                                    <button onclick="resetClassTimetable()" class="bg-gray-100 text-gray-600 px-3 py-1.5 rounded text-sm font-bold hover:bg-gray-200"><i class="fa-solid fa-rotate-left mr-1"></i>초기화</button>
+                                    <button onclick="autoFill()" class="bg-pink-100 text-pink-700 px-3 py-1.5 rounded text-sm font-bold hover:bg-pink-200"><i class="fa-solid fa-magic mr-1"></i>자동채우기</button>
+                                    <button onclick="downloadExcel()" class="bg-green-600 text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-green-700"><i class="fa-solid fa-file-excel mr-1"></i>저장</button>
+                                </div>
+                            </div>
+                            <div class="flex-1 border rounded-lg overflow-hidden">
+                                <table class="base-table w-full" style="table-layout: fixed;">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="w-16 h-10">교시</th>
+                                            <th class="h-10">월</th>
+                                            <th class="h-10">화</th>
+                                            <th class="h-10">수</th>
+                                            <th class="h-10">목</th>
+                                            <th class="h-10">금</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="editor-grid-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-1">
+                        <div class="card h-full flex flex-col sticky top-0">
+                            <h3 class="font-bold text-gray-800 mb-4 border-b pb-2">🎨 과목 팔레트</h3>
+                            <div class="flex-1 overflow-y-auto pr-2 space-y-6">
+                                <div><h4 class="text-xs font-bold text-pink-600 mb-2 uppercase flex justify-between">전담 과목 (우선) <i class="fa-solid fa-star"></i></h4><div id="palette-jeondam" class="space-y-1"></div></div>
+                                <div><h4 class="text-xs font-bold text-gray-600 mb-2 uppercase">담임 과목 (나머지)</h4><div id="palette-damim" class="space-y-1"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- JavaScript Files -->
+    <script src="js/state.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/firebase.js"></script>
+    <script src="js/tab0.js"></script>
+    <script src="js/tab1.js"></script>
+    <script src="js/tab2.js"></script>
+    <script src="js/tab3.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
