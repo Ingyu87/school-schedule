@@ -295,37 +295,43 @@ window.addTeacherAssignment = function(idx) {
     
     saveData({ teachers: state.teachers });
     
-    // 이전 선택 값 저장 (리셋하지 않고 유지)
-    const prevGrade = gradeNum;
-    const prevSubj = subjVal;
-    const prevClass = classNum;
+    // renderTab2() 대신 필요한 부분만 업데이트
+    // 1. 시수 재계산 및 업데이트
+    const t = state.teachers[idx];
+    const totalHours = t.assignments.reduce((sum, a) => sum + (a.hours || 0), 0);
+    const statusEl = document.querySelector(`#teacher-setup-list > div:nth-child(${idx + 1}) .text-sm.font-bold.px-2`);
+    if (statusEl) {
+        const statusClass = totalHours === 21 ? 'bg-green-100 text-green-700' : 
+                           totalHours > 21 ? 'bg-red-100 text-red-700' : 
+                           'bg-orange-100 text-orange-700';
+        statusEl.className = `text-sm font-bold px-2 py-1 rounded ${statusClass}`;
+        statusEl.textContent = `${totalHours}/21시간`;
+    }
     
-    renderTab2();
+    // 2. 배정 목록(badges)에 새 항목 추가
+    const badgesContainer = document.querySelector(`#teacher-setup-list > div:nth-child(${idx + 1}) .flex.flex-wrap.mb-3`);
+    if (badgesContainer) {
+        const bgClass = isSpecial ? 'bg-yellow-100 text-yellow-700' : 'bg-indigo-100 text-indigo-700';
+        const displaySubj = subjVal.replace('[특수]', '');
+        const aIdx = t.assignments.length - 1;
+        const badgeHtml = `
+            <span class="inline-flex items-center ${bgClass} px-2 py-1 rounded text-xs mr-1 mb-1">
+                ${isSpecial ? '⭐' : ''}${gradeNum}-${classNum} ${displaySubj}(${hours}h)
+                <i class="fa-solid fa-xmark ml-1 cursor-pointer hover:text-red-500" onclick="removeTeacherAssignment(${idx}, ${aIdx})"></i>
+            </span>`;
+        
+        // "배정된 과목 없음" 텍스트 제거
+        const emptyText = badgesContainer.querySelector('.text-gray-400');
+        if (emptyText) emptyText.remove();
+        
+        badgesContainer.insertAdjacentHTML('beforeend', badgeHtml);
+    }
     
-    // 이전 선택 값 모두 복원 (리셋하지 않음)
-    setTimeout(() => {
-        const newGradeSel = document.getElementById(`t${idx}-grade`);
-        const newSubjSel = document.getElementById(`t${idx}-subj`);
-        const newClassSel = document.getElementById(`t${idx}-class`);
-        if (newGradeSel) {
-            newGradeSel.value = prevGrade;
-            updateTeacherSubjectOptions(idx);
-            setTimeout(() => {
-                const subjSelAgain = document.getElementById(`t${idx}-subj`);
-                const classSelAgain = document.getElementById(`t${idx}-class`);
-                if (subjSelAgain) {
-                    subjSelAgain.value = prevSubj;
-                    updateTeacherClassOptions(idx);
-                    setTimeout(() => {
-                        // 반도 유지 (리셋하지 않음)
-                        if (classSelAgain) {
-                            classSelAgain.value = prevClass;
-                        }
-                    }, 0);
-                }
-            }, 0);
-        }
-    }, 0);
+    // 3. 반 드롭다운만 업데이트 (방금 추가한 반을 disabled 처리)
+    updateTeacherClassOptions(idx);
+    
+    // 4. 전담 시간표도 업데이트 (renderTeacherTimetables 호출)
+    renderTeacherTimetables();
 };
 
 window.removeTeacherAssignment = function(teacherIdx, assignIdx) {
