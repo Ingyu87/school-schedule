@@ -3,7 +3,6 @@
 function renderTab2() {
     renderSpecialSupport();
     renderTeacherSetup();
-    // renderTeacherTimetables는 버튼 클릭 시에만 표시
 }
 
 function renderSpecialSupport() {
@@ -391,9 +390,6 @@ window.toggleTeacherAssignment = function(idx, key, hours, isSpecial) {
             badgesContainer.innerHTML = '<span class="text-gray-400 text-sm">배정된 과목 없음</span>';
         }
     }
-    
-    // 3. 전담 시간표도 업데이트
-    renderTeacherTimetables();
 };
 
 window.removeTeacherAssignment = function(teacherIdx, assignIdx) {
@@ -711,14 +707,12 @@ window.clickTeacherCell = function(teacherIdx, r, c, event) {
     
     saveData({teachers: state.teachers});
     
-    // 선택 상태 유지하면서 렌더링
-    renderTeacherTimetables();
-    
-    // 선택 상태 복원
-    if (selectedTeacherClass.teacherIdx !== null && selectedTeacherClass.classKey) {
-        setTimeout(() => {
-            selectTeacherClass(selectedTeacherClass.teacherIdx, selectedTeacherClass.classKey, selectedTeacherClass.subject);
-        }, 0);
+    // 모달에서 시간표 업데이트
+    const modal = document.getElementById('teacher-timetable-modal');
+    if (modal) {
+        // 모달이 열려있으면 다시 그리기
+        modal.remove();
+        toggleTeacherTimetable(teacherIdx);
     }
 };
 
@@ -745,10 +739,17 @@ function checkAllConflicts(classKey, row, col, source, sourceIdx) {
         const gradeNum = parseInt(cls.split('-')[0]);
         if (isNaN(gradeNum)) continue;
         
+        // 시설 시간표 행 계산 (학급 시간표 행 → 시설 시간표 행)
         let facRow = row;
-        if (row === 3) facRow = (gradeNum <= 3) ? 4 : 3;
-        else if (row >= 4) facRow = row + 1;
+        if (row === 3) {
+            // 4교시: 1~3학년은 4번 행, 4~6학년은 3번 행
+            facRow = (gradeNum <= 3) ? 4 : 3;
+        } else if (row >= 4) {
+            // 5교시 이상: +1
+            facRow = row + 1;
+        }
         
+        // 시설 배정 확인 (우선순위 1)
         if (state.facilities.gym[facRow]) {
             const gymVal = state.facilities.gym[facRow][col] || '';
             if (checkFacilityAssignment(gymVal, cls)) {
@@ -763,6 +764,7 @@ function checkAllConflicts(classKey, row, col, source, sourceIdx) {
             }
         }
         
+        // 다른 전담 교사 배정 확인 (우선순위 2)
         for (let i = 0; i < state.teachers.length; i++) {
             if (source === 'teacher' && i === sourceIdx) continue;
             const schedule = state.teachers[i].schedule;
