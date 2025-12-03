@@ -277,7 +277,8 @@ function countUse(k, s) {
                     const entries = parseScheduleEntries(cell);
                     entries.forEach(entry => {
                         if (entry.classKey === sk) {
-                            if (!entry.subject || entry.subject === s) {
+                            // 과목명이 명시되어 있을 때만 카운트 (과목명 없으면 카운트하지 않음)
+                            if (entry.subject && entry.subject === s) {
                                 c++;
                             }
                         }
