@@ -76,16 +76,9 @@ window.addSpecialSupport = function() {
     state.specialSupport.push({ grade: gradeNum, classNum: parseInt(classNum), subject, hours });
     saveData({ specialSupport: state.specialSupport });
     
-    // 모든 전담 교사 배정 폼의 과목 드롭다운 업데이트 (특수부장 과목 반영)
+    // 모든 전담 교사의 드롭다운 업데이트
     state.teachers.forEach((t, idx) => {
-        const gradeSel = document.getElementById(`t${idx}-grade`);
-        if (gradeSel && gradeSel.value == gradeNum) {
-            updateTeacherSubjectOptions(idx);
-            const subjSel = document.getElementById(`t${idx}-subj`);
-            if (subjSel && subjSel.value) {
-                updateTeacherClassOptions(idx);
-            }
-        }
+        populateTeacherAssignmentOptions(idx);
     });
     
     renderTab2();
@@ -94,6 +87,12 @@ window.addSpecialSupport = function() {
 window.removeSpecialSupport = function(idx) {
     state.specialSupport.splice(idx, 1);
     saveData({ specialSupport: state.specialSupport });
+    
+    // 모든 전담 교사의 드롭다운 업데이트
+    state.teachers.forEach((t, tidx) => {
+        populateTeacherAssignmentOptions(tidx);
+    });
+    
     renderTab2();
 };
 
@@ -146,24 +145,76 @@ function renderTeacherSetup() {
                 <div class="flex flex-wrap mb-3 min-h-[32px]">${badges || '<span class="text-gray-400 text-sm">배정된 과목 없음</span>'}</div>
                 
                 <div class="flex gap-2 flex-wrap items-center border-t pt-3">
-                    <select id="t${idx}-grade" class="border rounded p-1.5 text-sm" onchange="updateTeacherSubjectOptions(${idx})">
-                        <option value="">학년</option>
-                        <option value="3">3학년</option>
-                        <option value="4">4학년</option>
-                        <option value="5">5학년</option>
-                        <option value="6">6학년</option>
-                    </select>
-                    <select id="t${idx}-subj" class="border rounded p-1.5 text-sm" onchange="updateTeacherClassOptions(${idx})">
-                        <option value="">과목</option>
-                    </select>
-                    <select id="t${idx}-class" class="border rounded p-1.5 text-sm">
-                        <option value="">반</option>
+                    <select id="t${idx}-assignment" class="border rounded p-1.5 text-sm flex-1" style="min-width: 300px;">
+                        <option value="">과목 배정 선택 (학년-반 과목)</option>
                     </select>
                     <button onclick="addTeacherAssignment(${idx})" class="bg-indigo-600 text-white px-3 py-1.5 rounded text-sm hover:bg-indigo-700">
                         <i class="fa-solid fa-plus mr-1"></i>추가
                     </button>
                 </div>
             </div>`;
+    });
+    
+    // 각 교사의 드롭다운 옵션 채우기
+    state.teachers.forEach((t, idx) => {
+        populateTeacherAssignmentOptions(idx);
+    });
+}
+
+function populateTeacherAssignmentOptions(idx) {
+    const sel = document.getElementById(`t${idx}-assignment`);
+    if (!sel) return;
+    
+    sel.innerHTML = '<option value="">과목 배정 선택 (학년-반 과목)</option>';
+    
+    // 이미 배정된 항목들 (중복 방지용)
+    const assigned = new Set();
+    state.teachers.forEach(t => {
+        (t.assignments || []).forEach(a => {
+            assigned.add(`${a.grade}-${a.classNum}-${a.subject}`);
+        });
+    });
+    
+    // 3~6학년 순회
+    [3, 4, 5, 6].forEach(gradeNum => {
+        const gr = `${gradeNum}학년`;
+        const classCount = state.config[gr]?.classes || 0;
+        
+        // 일반 전담 과목
+        const allocs = getGradeAllocations(gr);
+        allocs.forEach(allocStr => {
+            const subjName = allocStr.split('(')[0];
+            const hours = parseFloat(allocStr.match(/\(([\d.]+)\)/)?.[1] || 0);
+            
+            // 보건 제외
+            if (subjName.includes('보건')) return;
+            
+            // 각 반에 대해 옵션 생성
+            for (let c = 1; c <= classCount; c++) {
+                const key = `${gradeNum}-${c}-${subjName}`;
+                const isAssigned = assigned.has(key);
+                const disabled = isAssigned ? 'disabled' : '';
+                const label = isAssigned ? 
+                    `${gradeNum}-${c} ${subjName} (${hours}h) [배정됨]` :
+                    `${gradeNum}-${c} ${subjName} (${hours}h)`;
+                
+                sel.innerHTML += `<option value="${key}" data-hours="${hours}" ${disabled}>${label}</option>`;
+            }
+        });
+        
+        // 특수부장 과목
+        (state.specialSupport || []).forEach(sp => {
+            if (sp.grade == gradeNum) {
+                const key = `${gradeNum}-${sp.classNum}-[특수]${sp.subject}`;
+                const isAssigned = assigned.has(key);
+                const disabled = isAssigned ? 'disabled' : '';
+                const label = isAssigned ?
+                    `⭐${gradeNum}-${sp.classNum} ${sp.subject} (${sp.hours}h) [배정됨]` :
+                    `⭐${gradeNum}-${sp.classNum} ${sp.subject} (${sp.hours}h)`;
+                
+                sel.innerHTML += `<option value="${key}" data-hours="${sp.hours}" data-special="true" ${disabled}>${label}</option>`;
+            }
+        });
     });
 }
 
@@ -258,20 +309,25 @@ window.updateTeacherClassOptions = function(idx) {
 // window.onTeacherClassChange 함수 제거됨
 
 window.addTeacherAssignment = function(idx) {
-    const gradeSel = document.getElementById(`t${idx}-grade`);
-    const subjSel = document.getElementById(`t${idx}-subj`);
-    const classSel = document.getElementById(`t${idx}-class`);
-    
-    const gradeNum = gradeSel.value;
-    const subjVal = subjSel.value;
-    const classNum = classSel.value;
-    
-    if (!gradeNum || !subjVal || !classNum) {
-        showAlert('학년, 과목, 반을 모두 선택하세요.');
+    const sel = document.getElementById(`t${idx}-assignment`);
+    if (!sel || !sel.value) {
+        showAlert('과목 배정을 선택하세요.');
         return;
     }
     
-    const hours = parseFloat(subjSel.options[subjSel.selectedIndex].dataset.hours) || 0;
+    // 값 파싱: "3-1-영어" 또는 "4-2-[특수]과학"
+    const parts = sel.value.split('-');
+    if (parts.length < 3) {
+        showAlert('잘못된 형식입니다.');
+        return;
+    }
+    
+    const gradeNum = parseInt(parts[0]);
+    const classNum = parseInt(parts[1]);
+    const subjVal = parts.slice(2).join('-'); // "[특수]" 포함 가능
+    const selectedOption = sel.options[sel.selectedIndex];
+    const hours = parseFloat(selectedOption.dataset.hours) || 0;
+    const isSpecial = selectedOption.dataset.special === 'true';
     
     if (!state.teachers[idx].assignments) state.teachers[idx].assignments = [];
     
@@ -283,17 +339,18 @@ window.addTeacherAssignment = function(idx) {
         return;
     }
     
-    const isSpecial = subjSel.options[subjSel.selectedIndex]?.dataset?.special === 'true';
-    
     state.teachers[idx].assignments.push({
-        grade: parseInt(gradeNum),
-        classNum: parseInt(classNum),
+        grade: gradeNum,
+        classNum: classNum,
         subject: subjVal,
         hours: hours,
         isSpecial: isSpecial
     });
     
     saveData({ teachers: state.teachers });
+    
+    // 드롭다운 옵션 다시 채우기 (배정된 항목 disabled 처리)
+    populateTeacherAssignmentOptions(idx);
     
     // renderTab2() 대신 필요한 부분만 업데이트
     // 1. 시수 재계산 및 업데이트
@@ -327,10 +384,7 @@ window.addTeacherAssignment = function(idx) {
         badgesContainer.insertAdjacentHTML('beforeend', badgeHtml);
     }
     
-    // 3. 반 드롭다운만 업데이트 (방금 추가한 반을 disabled 처리)
-    updateTeacherClassOptions(idx);
-    
-    // 4. 전담 시간표도 업데이트 (renderTeacherTimetables 호출)
+    // 3. 전담 시간표도 업데이트
     renderTeacherTimetables();
 };
 
