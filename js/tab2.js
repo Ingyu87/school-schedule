@@ -630,17 +630,17 @@ window.selectTeacherClass = function(teacherIdx, classKey, subject) {
     
     // 모든 팔레트 아이템 선택 해제
     document.querySelectorAll('[id^="teacher-palette-"] > div').forEach(el => {
-        el.classList.remove('ring-2', 'ring-indigo-500');
+        el.classList.remove('ring-2', 'ring-purple-500', 'border-purple-400');
     });
     
-    // 현재 선택된 아이템 하이라이트
+    // 현재 선택된 아이템 하이라이트 (보라색 테두리)
     const palette = document.getElementById(`teacher-palette-${teacherIdx}`);
     if (palette) {
         palette.querySelectorAll('div').forEach(el => {
             // onclick 속성에서 classKey와 subject 확인
             const onclickAttr = el.getAttribute('onclick');
             if (onclickAttr && onclickAttr.includes(`'${classKey}'`) && onclickAttr.includes(`'${subject}'`)) {
-                el.classList.add('ring-2', 'ring-indigo-500');
+                el.classList.add('ring-2', 'ring-purple-500', 'border-purple-400');
             }
         });
     }
