@@ -70,19 +70,19 @@ window.onEditorClassChange = function() {
 
 window.loadEditor = function(k) { 
     editorState.classKey = k; 
-    editorState.selectedSubj = null;
+    editorState.selectedSubj = null; 
     
     // 팔레트 초기 렌더링 (한 번만)
     const paletteJeondam = document.getElementById('palette-jeondam');
     const paletteDamim = document.getElementById('palette-damim');
     if (!paletteJeondam || paletteJeondam.children.length === 0) {
-        renderPalette(); 
+    renderPalette(); 
     } else {
         // 이미 렌더링되어 있으면 카운트만 업데이트
         updatePaletteCounts();
     }
     
-    renderEditorGrid();
+    renderEditorGrid(); 
     updateClassCompletionCheckbox();
 };
 
@@ -307,7 +307,7 @@ window.selSubj = function(s) {
     if (editorState.selectedSubj === s) {
         editorState.selectedSubj = null;
     } else {
-        editorState.selectedSubj = s;
+    editorState.selectedSubj = s; 
     }
     
     // 팔레트 재렌더링하지 않고 CSS 클래스만 업데이트
@@ -454,22 +454,22 @@ window.clickCell = function(r, c) {
     }
     
     // 목표 시수 확인 - 전담 과목도 교육과정 전체 시수를 기준으로 함
-    const jList = getGradeAllocations(gr);
-    const isJeondam = jList.some(x => x.startsWith(editorState.selectedSubj));
+        const jList = getGradeAllocations(gr);
+        const isJeondam = jList.some(x => x.startsWith(editorState.selectedSubj));
     
     // 전담 과목이든 담임 과목이든 교육과정 전체 시수를 목표로 함
     // (전담 배정 시수는 이미 전담 교사가 배정한 것이므로, 담임은 나머지를 채울 수 있음)
     const targetHours = state.curriculum[gr]?.[editorState.selectedSubj] || 0;
-    
-    const currentHours = countUse(k, editorState.selectedSubj);
-    
-    // 목표 시수에 도달했으면 더 이상 입력 불가
-    if (currentHours >= targetHours && targetHours > 0) {
-        showAlert(`${editorState.selectedSubj}은(는) 이미 ${targetHours}시간이 모두 배정되었습니다.`);
-        return;
-    }
-    
-    state.timetables[k][r][c] = editorState.selectedSubj;
+        
+        const currentHours = countUse(k, editorState.selectedSubj);
+        
+        // 목표 시수에 도달했으면 더 이상 입력 불가
+        if (currentHours >= targetHours && targetHours > 0) {
+            showAlert(`${editorState.selectedSubj}은(는) 이미 ${targetHours}시간이 모두 배정되었습니다.`);
+            return;
+        }
+        
+        state.timetables[k][r][c] = editorState.selectedSubj;
     
     renderEditorGrid(); 
     updatePaletteCounts(); // 팔레트 재렌더링 대신 카운트만 업데이트
@@ -534,8 +534,8 @@ window.downloadExcel = function() {
     }
     
     try {
-        const wb = XLSX.utils.book_new();
-        const classPeriods = ["1교시","2교시","3교시","4교시","5교시","6교시"];
+    const wb = XLSX.utils.book_new();
+    const classPeriods = ["1교시","2교시","3교시","4교시","5교시","6교시"];
         
         // 현재 선택된 학급의 시간표만 생성
         const tt = state.timetables[k];
@@ -581,12 +581,12 @@ function renderTab3() {
         // 팔레트 초기 렌더링 (한 번만)
         const paletteJeondam = document.getElementById('palette-jeondam');
         if (!paletteJeondam || paletteJeondam.children.length === 0) {
-            renderPalette();
+    renderPalette();
         } else {
             updatePaletteCounts();
         }
-        renderEditorGrid();
-    }
+    renderEditorGrid();
+}
 }
 
 // 학급 시간표 완료 관련 함수
