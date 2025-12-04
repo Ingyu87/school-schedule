@@ -689,6 +689,23 @@ window.onTeacherCellInput = function(teacherIdx, r, c, value) {
     }
 };
 
+// 전담 교사 시간표 셀 키보드 핸들러
+window.handleTeacherCellKeydown = function(e, teacherIdx, r, c) {
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        const t = state.teachers[teacherIdx];
+        if (!t.schedule) t.schedule = grid(6,5);
+        t.schedule[r][c] = '';
+        saveData({teachers: state.teachers});
+        
+        const modal = document.getElementById('teacher-timetable-modal');
+        if (modal) {
+            modal.remove();
+            toggleTeacherTimetable(teacherIdx);
+        }
+    }
+};
+
 window.clickTeacherCell = function(teacherIdx, r, c, event) {
     const t = state.teachers[teacherIdx];
     if (!t.schedule) t.schedule = grid(6,5);
@@ -951,12 +968,13 @@ window.toggleTeacherTimetable = function(idx) {
             const ch = subjects[subj];
             const isDone = ch.current >= ch.target;
             const isOver = ch.current > ch.target;
+            // 완료되어도 보라색 테두리 유지 (다 채울 때까지)
             const bgClass = isOver ? 'bg-red-100 text-red-700 border-red-300' : 
-                           isDone ? 'bg-green-100 text-green-700 border-green-300' : 
+                           isDone ? 'bg-purple-50 text-purple-700 border-purple-400 border-2' : 
                            'bg-gray-50 text-gray-700 border-gray-200';
             const icon = ch.isSpecial ? '⭐' : '';
             paletteHtml += `
-                <div class="inline-flex items-center px-2 py-1 rounded border text-xs ${bgClass} cursor-pointer hover:opacity-80 mb-1" 
+                <div class="inline-flex items-center px-2 py-1 rounded border-2 text-xs ${bgClass} cursor-pointer hover:opacity-80 mb-1" 
                      onclick="selectTeacherClass(${idx}, '${classKey}', '${subj}')" 
                      title="${subj}">
                     ${icon}<span class="font-bold">${classKey}</span> <span class="text-gray-600 ml-1">${subj}</span> <span class="ml-1 font-bold">${ch.current}/${ch.target}</span>
@@ -971,7 +989,10 @@ window.toggleTeacherTimetable = function(idx) {
         gridHtml += `<tr><td class="bg-gray-50 font-bold text-xs p-2">${classPeriodLabels[r]}</td>`;
         for(let c = 0; c < 5; c++) {
             const val = t.schedule[r][c] || '';
-            gridHtml += `<td class="h-12 border cursor-pointer hover:bg-indigo-50" onclick="clickTeacherCell(${idx}, ${r}, ${c})">
+            gridHtml += `<td class="h-12 border cursor-pointer hover:bg-indigo-50" 
+                onclick="clickTeacherCell(${idx}, ${r}, ${c})"
+                onkeydown="handleTeacherCellKeydown(event, ${idx}, ${r}, ${c})"
+                tabindex="0">
                 <div class="w-full h-full text-center text-sm font-medium flex items-center justify-center">${val || ''}</div>
             </td>`;
         }

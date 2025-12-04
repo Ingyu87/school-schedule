@@ -166,10 +166,14 @@ function renderEditorGrid() {
                 cls += 'bg-white';
             }
             
+            // Delete 키 지원을 위한 tabindex 추가
+            const tabindex = isFixed ? '' : 'tabindex="0"';
+            const keydownHandler = isFixed ? '' : `onkeydown="handleClassCellKeydown(event, ${i}, ${j})"`;
+            
             if (isFixed) {
                 h += `<td class="${cls}">${txt}</td>`;
             } else {
-                h += `<td class="${cls}" onclick="clickCell(${i},${j})">${txt}</td>`;
+                h += `<td class="${cls}" onclick="clickCell(${i},${j})" ${tabindex} ${keydownHandler}>${txt}</td>`;
             }
         }
         h += '</tr>';
@@ -421,6 +425,38 @@ function isTeacherAssigned(classRow, col, classKey) {
     }
     return false;
 }
+
+// 학급 시간표 셀 키보드 핸들러
+window.handleClassCellKeydown = function(e, r, c) {
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        const k = editorState.classKey;
+        if (!k) return;
+        
+        // 시설이나 전담 배정된 시간은 삭제 불가
+        const gr = k.split('-')[0];
+        const gradeNum = parseInt(gr);
+        const sk = k.replace('학년-','-').replace('반','');
+        
+        if(isFacilityAssigned(r, c, sk, gradeNum)) {
+            showAlert('시설 배정된 시간은 삭제할 수 없습니다.');
+            return;
+        }
+        
+        if(isTeacherAssigned(r, c, sk)) {
+            showAlert('전담 교사가 배정된 시간은 삭제할 수 없습니다.<br>전담 시간표에서 수정하세요.');
+            return;
+        }
+        
+        // 삭제
+        if (state.timetables[k]) {
+            state.timetables[k][r][c] = '';
+            renderEditorGrid();
+            updatePaletteCounts();
+            saveData({timetables: state.timetables});
+        }
+    }
+};
 
 window.clickCell = function(r, c) {
     const k = editorState.classKey;

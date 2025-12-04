@@ -325,6 +325,7 @@ window.fmtFacility = function(el) {
 };
 
 // 전담 교사 시간표 입력 포맷팅 (숫자 입력 시 자동으로 "-" 추가)
+// 격주 입력은 시설 시간표만 가능하므로 슬래시 처리 제거
 window.fmtTeacher = function(el) {
     let v = el.value;
     
@@ -338,37 +339,22 @@ window.fmtTeacher = function(el) {
         return;
     }
     
-    // 쉼표나 스페이스를 슬래시로 변환
-    v = v.replace(/[,\s]+/g, '/');
+    // 격주 입력 불가: 쉼표, 스페이스, 슬래시 제거
+    v = v.replace(/[,\s\/]/g, '');
     
-    // 숫자, 하이픈, 슬래시, 괄호, 한글만 허용
-    v = v.replace(/[^0-9\-\/\(\)가-힣]/g, '');
+    // 숫자, 하이픈, 괄호, 한글만 허용
+    v = v.replace(/[^0-9\-\(\)가-힣]/g, '');
     
-    // 슬래시로 구분된 여러 항목 처리
-    if (v.includes('/')) {
-        const parts = v.split('/');
-        const formatted = parts.map(p => {
-            // 괄호나 하이픈이 있으면 그대로 유지
-            if (p.includes('(') || p.includes('-')) return p;
-            // 숫자만 추출
-            p = p.replace(/[^0-9]/g, '');
-            if (p.length > 1) return p[0] + '-' + p.substring(1);
-            if (p.length === 1) return p + '-';
-            return '';
-        }).filter(p => p).join('/');
-        el.value = formatted;
-    } else {
-        // 괄호나 하이픈이 있으면 포맷팅 안 함
-        if (v.includes('(') || v.includes('-')) {
-            el.value = v;
-            return;
-        }
-        // 숫자만 추출
-        v = v.replace(/[^0-9]/g, '');
-        if (v.length > 1) el.value = v[0] + '-' + v.substring(1);
-        else if (v.length === 1) el.value = v + '-';
-        else el.value = '';
+    // 괄호나 하이픈이 있으면 포맷팅 안 함
+    if (v.includes('(') || v.includes('-')) {
+        el.value = v;
+        return;
     }
+    // 숫자만 추출
+    v = v.replace(/[^0-9]/g, '');
+    if (v.length > 1) el.value = v[0] + '-' + v.substring(1);
+    else if (v.length === 1) el.value = v + '-';
+    else el.value = '';
 };
 
 // =========================
