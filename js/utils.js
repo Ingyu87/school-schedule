@@ -277,8 +277,7 @@ window.fmtFacility = function(el) {
     let v = el.value;
     
     // 빈 값이면 그대로
-    if (!v || v === '-' || v === '/' || v === ',') {
-        el.value = '';
+    if (!v) {
         return;
     }
     
@@ -288,9 +287,13 @@ window.fmtFacility = function(el) {
     // 숫자, 하이픈, 슬래시만 허용
     v = v.replace(/[^0-9\-\/]/g, '');
     
+    // 슬래시로 구분된 여러 항목 처리
     if (v.includes('/')) {
         const parts = v.split('/');
         const formatted = parts.map(p => {
+            // 이미 하이픈이 있으면 그대로
+            if (p.includes('-')) return p;
+            // 숫자만 추출
             p = p.replace(/[^0-9]/g, '');
             if (p.length > 1) return p[0] + '-' + p.substring(1);
             if (p.length === 1) return p + '-';
@@ -298,6 +301,12 @@ window.fmtFacility = function(el) {
         }).filter(p => p).join('/');
         el.value = formatted;
     } else {
+        // 이미 하이픈이 있으면 포맷팅 안 함
+        if (v.includes('-')) {
+            el.value = v;
+            return;
+        }
+        // 숫자만 추출
         v = v.replace(/[^0-9]/g, '');
         if (v.length > 1) el.value = v[0] + '-' + v.substring(1);
         else if (v.length === 1) el.value = v + '-';
@@ -310,13 +319,12 @@ window.fmtTeacher = function(el) {
     let v = el.value;
     
     // 이미 완성된 형식이 있으면 (예: "4-1(영어)") 그대로 유지
-    if (v.includes('(') || v.match(/\d+-\d+/)) {
+    if (v.includes('(')) {
         return;
     }
     
     // 빈 값이면 그대로
-    if (!v || v === '-' || v === '/' || v === ',') {
-        el.value = '';
+    if (!v) {
         return;
     }
     
@@ -330,8 +338,8 @@ window.fmtTeacher = function(el) {
     if (v.includes('/')) {
         const parts = v.split('/');
         const formatted = parts.map(p => {
-            // 괄호가 있으면 그대로 유지
-            if (p.includes('(')) return p;
+            // 괄호나 하이픈이 있으면 그대로 유지
+            if (p.includes('(') || p.includes('-')) return p;
             // 숫자만 추출
             p = p.replace(/[^0-9]/g, '');
             if (p.length > 1) return p[0] + '-' + p.substring(1);
@@ -340,8 +348,11 @@ window.fmtTeacher = function(el) {
         }).filter(p => p).join('/');
         el.value = formatted;
     } else {
-        // 괄호가 있으면 그대로 유지
-        if (v.includes('(')) return;
+        // 괄호나 하이픈이 있으면 포맷팅 안 함
+        if (v.includes('(') || v.includes('-')) {
+            el.value = v;
+            return;
+        }
         // 숫자만 추출
         v = v.replace(/[^0-9]/g, '');
         if (v.length > 1) el.value = v[0] + '-' + v.substring(1);
