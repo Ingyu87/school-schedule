@@ -86,6 +86,14 @@ async function init() {
     }
     
     const school = JSON.parse(saved);
+    
+    // 마스터키 모드 체크
+    if (school.name === 'MASTER') {
+        // 마스터키 모드면 학교 선택 페이지로
+        window.location.href = 'school-select.html';
+        return;
+    }
+    
     // firebase.js의 currentSchoolName 업데이트
     if (typeof getCurrentSchoolName === 'function') {
         // getCurrentSchoolName이 있으면 사용

@@ -67,7 +67,12 @@ function getCurrentSchoolName() {
         if (saved) {
             try {
                 const school = JSON.parse(saved);
-                currentSchoolName = school.name;
+                // 마스터키 모드가 아니면 학교명 사용
+                if (school.name && school.name !== 'MASTER') {
+                    currentSchoolName = school.name;
+                } else {
+                    currentSchoolName = '가동초'; // 기본값
+                }
             } catch (e) {
                 console.error('Failed to parse current_school:', e);
                 currentSchoolName = '가동초'; // 기본값

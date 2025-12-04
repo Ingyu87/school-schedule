@@ -36,6 +36,10 @@ function logout() {
     window.location.href = 'login.html';
 }
 
+// 마스터키 확인
+const MASTER_KEY = '0307';
+const MASTER_KEY_HASH = 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3'; // '0307'의 SHA-256 해시
+
 // 로그인 처리
 window.handleLogin = async function() {
     const schoolName = document.getElementById('school-name-input').value.trim();
@@ -46,17 +50,54 @@ window.handleLogin = async function() {
         return;
     }
     
-    // 비밀번호 해싱
+    // 마스터키 확인
     const passwordHash = await hashPassword(password);
+    if (password === MASTER_KEY || passwordHash === MASTER_KEY_HASH) {
+        // 마스터키로 로그인: 학교 선택 페이지로 이동
+        setCurrentSchool('MASTER', 'MASTER');
+        window.location.href = 'school-select.html';
+        return;
+    }
     
+    // 일반 학교 로그인
     // Firebase에서 학교 정보 확인
     try {
-        const { doc, getDoc, setDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-        
+        // Firebase 초기화 확인 및 대기
         if (!window.firebaseDb) {
-            showAlert('Firebase 초기화 중 오류가 발생했습니다.', 'error');
-            return;
+            // Firebase 초기화 대기 (최대 3초)
+            let retries = 0;
+            while (!window.firebaseDb && retries < 30) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                retries++;
+            }
+            
+            if (!window.firebaseDb) {
+                // 직접 초기화 시도
+                try {
+                    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
+                    const { getFirestore } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                    
+                    const firebaseConfig = {
+                        apiKey: "AIzaSyATebSC3BCAlTVUO_ybyg1OoIdqgBlxFBc",
+                        authDomain: "school-schedule-d16bc.firebaseapp.com",
+                        projectId: "school-schedule-d16bc",
+                        storageBucket: "school-schedule-d16bc.firebasestorage.app",
+                        messagingSenderId: "173998479308",
+                        appId: "1:173998479308:web:b1ea6a69c743d838a5ef69",
+                        measurementId: "G-NPPXKJCGGB"
+                    };
+                    
+                    const firebaseApp = initializeApp(firebaseConfig);
+                    window.firebaseDb = getFirestore(firebaseApp);
+                } catch (initError) {
+                    console.error('Firebase init error:', initError);
+                    showAlert('Firebase 초기화 중 오류가 발생했습니다.', 'error');
+                    return;
+                }
+            }
         }
+        
+        const { doc, getDoc, setDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
         
         const schoolRef = doc(window.firebaseDb, 'schools', schoolName);
         const schoolDoc = await getDoc(schoolRef);
