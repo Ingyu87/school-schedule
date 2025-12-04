@@ -37,6 +37,8 @@ function renderTab1() {
 
 window.updFac = function(t, r, c, v) {
     v = v.trim();
+    // 쉼표를 슬래시로 변환
+    v = v.replace(/,/g, '/');
     
     if (v) {
         const classes = v.split('/').map(x => x.trim()).filter(x => x);

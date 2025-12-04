@@ -277,11 +277,15 @@ window.fmtFacility = function(el) {
     let v = el.value;
     
     // 빈 값이면 그대로
-    if (!v || v === '-' || v === '/') {
+    if (!v || v === '-' || v === '/' || v === ',') {
         el.value = '';
         return;
     }
     
+    // 쉼표나 스페이스를 슬래시로 변환
+    v = v.replace(/[,\s]+/g, '/');
+    
+    // 숫자, 하이픈, 슬래시만 허용
     v = v.replace(/[^0-9\-\/]/g, '');
     
     if (v.includes('/')) {
@@ -311,10 +315,13 @@ window.fmtTeacher = function(el) {
     }
     
     // 빈 값이면 그대로
-    if (!v || v === '-' || v === '/') {
+    if (!v || v === '-' || v === '/' || v === ',') {
         el.value = '';
         return;
     }
+    
+    // 쉼표나 스페이스를 슬래시로 변환
+    v = v.replace(/[,\s]+/g, '/');
     
     // 숫자, 하이픈, 슬래시, 괄호, 한글만 허용
     v = v.replace(/[^0-9\-\/\(\)가-힣]/g, '');
