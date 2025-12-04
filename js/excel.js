@@ -189,4 +189,60 @@ function parseScheduleEntries(cellValue) {
     return entries;
 }
 
+// 시설 시간표 엑셀 생성
+window.downloadFacilityExcel = function(type) {
+    const facilityName = type === 'gym' ? '체육관' : '도서관';
+    const facilityNameEng = type === 'gym' ? '체육관' : '도서관';
+    const fileName = type === 'gym' ? '느티홀(체육관)' : '글샘터(도서관)';
+    
+    try {
+        const wb = XLSX.utils.book_new();
+        // 교시 레이블 (엑셀용 텍스트만)
+        const periodLabels = PERIODS || ["1교시", "2교시", "3교시", "4교시(4~6학년)", "4교시(1~3학년)", "5교시", "6교시"];
+        
+        // 헤더
+        const data = [['교시', '월', '화', '수', '목', '금']];
+        
+        // 각 교시별 데이터
+        const facility = state.facilities[type];
+        if (!facility) {
+            showAlert(`${facilityName} 시간표 데이터가 없습니다.`, 'error');
+            return;
+        }
+        
+        for (let i = 0; i < 7; i++) {
+            const row = [periodLabels[i] || `교시${i + 1}`];
+            for (let j = 0; j < 5; j++) {
+                const val = facility[i] ? (facility[i][j] || '') : '';
+                row.push(val);
+            }
+            data.push(row);
+        }
+        
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        
+        // 열 너비 설정
+        ws['!cols'] = [
+            { wch: 18 },  // 교시
+            { wch: 15 }, // 월
+            { wch: 15 }, // 화
+            { wch: 15 }, // 수
+            { wch: 15 }, // 목
+            { wch: 15 }  // 금
+        ];
+        
+        const sheetName = facilityNameEng;
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        
+        const fileDate = new Date().toISOString().split('T')[0];
+        const finalFileName = `${fileName}_시간표_${fileDate}.xlsx`;
+        XLSX.writeFile(wb, finalFileName);
+        
+        showAlert(`${facilityName} 시간표가 저장되었습니다!`, 'success');
+    } catch (error) {
+        console.error('엑셀 생성 오류:', error);
+        showAlert('엑셀 파일 생성 중 오류가 발생했습니다.', 'error');
+    }
+};
+
 
