@@ -729,9 +729,13 @@ window.clickTeacherCell = function(teacherIdx, r, c, event) {
             currentEntries.splice(sameEntryIdx, 1);
         } else {
             // 한 시간에 두 개 클래스는 불가능 (시설 시간표만 가능)
-            if (currentEntries.length > 0) {
-                showAlert('한 시간에 두 개 클래스를 배정할 수 없습니다.<br>다른 시간대를 선택하거나 기존 배정을 삭제하세요.');
-                return;
+            // 기존에 두 개 클래스가 있으면 모두 지우고 새로 추가
+            if (currentEntries.length > 1) {
+                // 두 개 이상이면 모두 지우고 새로 추가
+                currentEntries = [];
+            } else if (currentEntries.length === 1) {
+                // 한 개가 있으면 지우고 새로 추가
+                currentEntries = [];
             }
             
             // 충돌 확인
@@ -769,7 +773,7 @@ window.clickTeacherCell = function(teacherIdx, r, c, event) {
             }
             
             // 한 개만 추가
-            currentEntries = [{ classKey, subject }];
+            currentEntries.push({ classKey, subject });
         }
         
         setCell(currentEntries);
