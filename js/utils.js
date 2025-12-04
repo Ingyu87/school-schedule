@@ -273,18 +273,28 @@ window.fmtCls = function(el) {
     else el.value = '';
 };
 
+// 입력 중에는 숫자, 쉼표, 스페이스, 하이픈만 허용 (포맷팅 안 함)
+window.fmtFacilityInput = function(el) {
+    let v = el.value;
+    // 숫자, 쉼표, 스페이스, 하이픈만 허용 (다른 문자 제거)
+    v = v.replace(/[^0-9,\s\-]/g, '');
+    el.value = v;
+};
+
+// 포커스를 잃을 때 포맷팅 수행
 window.fmtFacility = function(el) {
     let v = el.value;
     
     // 빈 값이면 그대로
-    if (!v) {
+    if (!v || v.trim() === '') {
+        el.value = '';
         return;
     }
     
     // 쉼표나 스페이스를 슬래시로 변환
     v = v.replace(/[,\s]+/g, '/');
     
-    // 숫자, 하이픈, 슬래시만 허용
+    // 숫자, 하이픈, 슬래시만 남기기
     v = v.replace(/[^0-9\-\/]/g, '');
     
     // 슬래시로 구분된 여러 항목 처리
