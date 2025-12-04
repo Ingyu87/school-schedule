@@ -28,7 +28,10 @@
                 <button onclick="switchTab('tab3')" id="btn-tab3" class="tab-btn">3. 학급 시간표</button>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="logout()" class="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded border border-gray-200 hover:bg-gray-200 font-bold">
+                <button onclick="checkAdminAccess()" class="text-xs bg-purple-100 text-purple-700 px-3 py-1.5 rounded border border-purple-200 hover:bg-purple-200 transition font-bold">
+                    <i class="fa-solid fa-shield-halved mr-1"></i>관리자 페이지
+                </button>
+                <button onclick="logout()" class="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded border border-gray-200 hover:bg-gray-200 transition">
                     <i class="fa-solid fa-sign-out-alt mr-1"></i>로그아웃
                 </button>
                 <button onclick="resetAllData()" class="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded border border-red-200 hover:bg-red-100 font-bold">
