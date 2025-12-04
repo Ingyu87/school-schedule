@@ -131,3 +131,21 @@ window.resetAllData = function() {
     }
 };
 
+// 도움말 토글
+window.toggleHelp = function(helpId) {
+    const helpDiv = document.getElementById(helpId);
+    const iconDiv = document.getElementById(helpId + '-icon');
+    
+    if (helpDiv && iconDiv) {
+        if (helpDiv.classList.contains('hidden')) {
+            helpDiv.classList.remove('hidden');
+            iconDiv.classList.remove('fa-chevron-down');
+            iconDiv.classList.add('fa-chevron-up');
+        } else {
+            helpDiv.classList.add('hidden');
+            iconDiv.classList.remove('fa-chevron-up');
+            iconDiv.classList.add('fa-chevron-down');
+        }
+    }
+};
+
