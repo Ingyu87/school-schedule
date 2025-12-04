@@ -108,6 +108,12 @@ async function init() {
         schoolNameDisplay.textContent = school.name;
     }
     
+    // 페이지 제목도 학교명으로 변경
+    const pageTitle = document.getElementById('page-title');
+    if (pageTitle) {
+        pageTitle.textContent = `${school.name} 스마트 스케줄러 2026`;
+    }
+    
     // Firebase 초기화 시도
     const firebaseLoaded = await initFirebase();
     
