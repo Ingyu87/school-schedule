@@ -34,6 +34,17 @@ let state = {
     facilities: { gym: grid(7,5), lib: grid(7,5) },
     roles: {},
     allocations: { common: {}, extra: {} },
+    teacherConfig: {
+        count: 6,
+        teachers: [
+            {name: '전담1', targetHours: 21},
+            {name: '전담2', targetHours: 21},
+            {name: '전담3', targetHours: 21},
+            {name: '전담4', targetHours: 21},
+            {name: '전담5', targetHours: 21},
+            {name: '전담6', targetHours: 21}
+        ]
+    },
     teachers: [
         {id:1, name:'전담1', assignments: [], schedule: grid(6,5), completed: false}, 
         {id:2, name:'전담2', assignments: [], schedule: grid(6,5), completed: false},

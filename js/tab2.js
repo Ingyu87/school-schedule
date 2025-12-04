@@ -127,6 +127,14 @@ window.removeSpecialSupport = function(idx) {
 };
 
 
+// 교사의 목표 시수 가져오기
+function getTeacherTargetHours(teacherIdx) {
+    if (state.teacherConfig && state.teacherConfig.teachers && state.teacherConfig.teachers[teacherIdx]) {
+        return state.teacherConfig.teachers[teacherIdx].targetHours || 21;
+    }
+    return 21; // 기본값
+}
+
 function renderTeacherSetup() {
     const container = document.getElementById('teacher-setup-list');
     if (!container) return;
@@ -138,6 +146,9 @@ function renderTeacherSetup() {
         
         let totalHours = t.assignments.reduce((sum, a) => sum + (a.hours || 0), 0);
         
+        // 0번 탭에서 설정한 목표 시수 가져오기
+        const targetHours = getTeacherTargetHours(idx);
+        
                 const badges = t.assignments.map((a, aIdx) => {
             const bgClass = a.isSpecial ? 'bg-yellow-100 text-yellow-700' : 'bg-indigo-100 text-indigo-700';
             const displaySubj = a.subject.replace('[특수]', '');
@@ -148,8 +159,8 @@ function renderTeacherSetup() {
                 </span>`;
         }).join('');
         
-        const statusClass = totalHours === 21 ? 'bg-green-100 text-green-700' : 
-                           totalHours > 21 ? 'bg-red-100 text-red-700' : 
+        const statusClass = totalHours === targetHours ? 'bg-green-100 text-green-700' : 
+                           totalHours > targetHours ? 'bg-red-100 text-red-700' : 
                            'bg-orange-100 text-orange-700';
         
         const completedCheck = t.completed ? 'checked' : '';
@@ -165,7 +176,7 @@ function renderTeacherSetup() {
                         ${completedBadge}
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="text-sm font-bold px-2 py-1 rounded ${statusClass}">${totalHours}/21시간</span>
+                        <span class="text-sm font-bold px-2 py-1 rounded ${statusClass}">${totalHours}/${targetHours}시간</span>
                         <button onclick="downloadTeacherExcel(${idx})" ${t.completed ? '' : 'disabled'} class="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed" title="시간표 저장 (완료 후 활성화)">
                             <i class="fa-solid fa-file-excel mr-1"></i>저장
                         </button>
@@ -401,11 +412,12 @@ window.toggleTeacherAssignment = function(idx, key, hours, isSpecial) {
     const totalHours = t.assignments.reduce((sum, a) => sum + (a.hours || 0), 0);
     const statusEl = document.querySelector(`#teacher-setup-list > div:nth-child(${idx + 1}) .text-sm.font-bold.px-2`);
     if (statusEl) {
-        const statusClass = totalHours === 21 ? 'bg-green-100 text-green-700' : 
-                           totalHours > 21 ? 'bg-red-100 text-red-700' : 
+        const targetHrs = getTeacherTargetHours(idx);
+        const statusClass = totalHours === targetHrs ? 'bg-green-100 text-green-700' : 
+                           totalHours > targetHrs ? 'bg-red-100 text-red-700' : 
                            'bg-orange-100 text-orange-700';
         statusEl.className = `text-sm font-bold px-2 py-1 rounded ${statusClass}`;
-        statusEl.textContent = `${totalHours}/21시간`;
+        statusEl.textContent = `${totalHours}/${targetHrs}시간`;
     }
     
     // 2. 배정 목록(badges) 전체 다시 그리기
@@ -451,7 +463,8 @@ window.resetTeacherAssignments = function(idx) {
         const statusEl = document.querySelector(`#teacher-setup-list > div:nth-child(${idx + 1}) .text-sm.font-bold.px-2`);
         if (statusEl) {
             statusEl.className = 'text-sm font-bold px-2 py-1 rounded bg-orange-100 text-orange-700';
-            statusEl.textContent = '0/21시간';
+            const targetHrs = getTeacherTargetHours(idx);
+            statusEl.textContent = `0/${targetHrs}시간`;
         }
         
         // 배정 목록 초기화
@@ -513,7 +526,7 @@ function renderTeacherTimetables() {
             });
         }
         
-        const targetHrs = (t.assignments || []).reduce((sum, a) => sum + (a.hours || 0), 0);
+        const targetHrs = getTeacherTargetHours(idx);
         let scheduleHrs = 0;
         Object.keys(classHours).forEach(classKey => {
             Object.values(classHours[classKey]).forEach(ch => {
@@ -960,7 +973,7 @@ window.toggleTeacherTimetable = function(idx) {
         });
     }
     
-    const targetHrs = (t.assignments || []).reduce((sum, a) => sum + (a.hours || 0), 0);
+    const targetHrs = getTeacherTargetHours(idx);
     let scheduleHrs = 0;
     Object.keys(classHours).forEach(classKey => {
         Object.values(classHours[classKey]).forEach(ch => {

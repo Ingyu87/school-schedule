@@ -6,6 +6,7 @@ function renderTab0() {
     renderCurriculum();
     renderTimeAllocationTable();
     renderCommonAllocations();
+    renderTeacherConfig();
 }
 
 function renderDailyCounts() {
@@ -259,4 +260,153 @@ window.removeAlloc = function(gr, val) {
     saveData({allocations: state.allocations});
     renderTab0();
 };
+
+function renderTeacherConfig() {
+    if (!state.teacherConfig) {
+        state.teacherConfig = {
+            count: state.teachers.length,
+            teachers: state.teachers.map((t, idx) => ({
+                name: t.name,
+                targetHours: 21
+            }))
+        };
+    }
+    
+    const countInput = document.getElementById('teacher-count-input');
+    if (countInput) {
+        countInput.value = state.teacherConfig.count || state.teachers.length;
+    }
+    
+    const tbody = document.getElementById('teacher-config-body');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    const count = state.teacherConfig.count || state.teachers.length;
+    
+    // 기존 교사 정보 유지하면서 부족하면 추가
+    while (state.teacherConfig.teachers.length < count) {
+        state.teacherConfig.teachers.push({
+            name: `전담${state.teacherConfig.teachers.length + 1}`,
+            targetHours: 21
+        });
+    }
+    
+    // 초과하면 제거
+    if (state.teacherConfig.teachers.length > count) {
+        state.teacherConfig.teachers = state.teacherConfig.teachers.slice(0, count);
+    }
+    
+    state.teacherConfig.teachers.forEach((teacher, idx) => {
+        tbody.innerHTML += `
+            <tr>
+                <td class="p-2 border text-center font-bold text-gray-600">${idx + 1}</td>
+                <td class="p-2 border">
+                    <input type="text" value="${teacher.name}" 
+                           class="w-full border rounded px-2 py-1 text-sm" 
+                           onchange="updateTeacherName(${idx}, this.value)"
+                           placeholder="교사 이름">
+                </td>
+                <td class="p-2 border">
+                    <input type="number" min="0" max="30" value="${teacher.targetHours || 21}" 
+                           class="w-full border rounded px-2 py-1 text-sm text-center font-bold" 
+                           onchange="updateTeacherTargetHours(${idx}, this.value)"
+                           placeholder="목표 시수">
+                </td>
+            </tr>`;
+    });
+    
+    // 2번 탭에 반영
+    syncTeachersFromConfig();
+}
+
+window.updateTeacherCount = function(count) {
+    const num = parseInt(count) || 1;
+    if (num < 1 || num > 20) {
+        showAlert('인원 수는 1~20명 사이여야 합니다.');
+        return;
+    }
+    
+    if (!state.teacherConfig) {
+        state.teacherConfig = {
+            count: state.teachers.length,
+            teachers: state.teachers.map(t => ({ name: t.name, targetHours: 21 }))
+        };
+    }
+    
+    state.teacherConfig.count = num;
+    
+    // 부족하면 추가
+    while (state.teacherConfig.teachers.length < num) {
+        state.teacherConfig.teachers.push({
+            name: `전담${state.teacherConfig.teachers.length + 1}`,
+            targetHours: 21
+        });
+    }
+    
+    // 초과하면 제거
+    if (state.teacherConfig.teachers.length > num) {
+        state.teacherConfig.teachers = state.teacherConfig.teachers.slice(0, num);
+    }
+    
+    saveData({ teacherConfig: state.teacherConfig });
+    renderTab0();
+    syncTeachersFromConfig();
+};
+
+window.updateTeacherName = function(idx, name) {
+    if (!state.teacherConfig || !state.teacherConfig.teachers[idx]) return;
+    
+    state.teacherConfig.teachers[idx].name = name.trim() || `전담${idx + 1}`;
+    saveData({ teacherConfig: state.teacherConfig });
+    syncTeachersFromConfig();
+};
+
+window.updateTeacherTargetHours = function(idx, hours) {
+    if (!state.teacherConfig || !state.teacherConfig.teachers[idx]) return;
+    
+    const num = parseInt(hours) || 21;
+    state.teacherConfig.teachers[idx].targetHours = num;
+    saveData({ teacherConfig: state.teacherConfig });
+    syncTeachersFromConfig();
+};
+
+// 0번 탭 설정을 2번 탭에 반영
+function syncTeachersFromConfig() {
+    if (!state.teacherConfig) return;
+    
+    const configTeachers = state.teacherConfig.teachers || [];
+    const currentTeachers = state.teachers || [];
+    
+    // 기존 교사 정보 업데이트
+    configTeachers.forEach((config, idx) => {
+        if (currentTeachers[idx]) {
+            // 이름 업데이트
+            currentTeachers[idx].name = config.name;
+            // 기존 assignments와 schedule은 유지
+        } else {
+            // 새 교사 추가
+            currentTeachers.push({
+                id: idx + 1,
+                name: config.name,
+                assignments: [],
+                schedule: grid(6, 5),
+                completed: false
+            });
+        }
+    });
+    
+    // 초과하는 교사 제거
+    if (currentTeachers.length > configTeachers.length) {
+        state.teachers = currentTeachers.slice(0, configTeachers.length);
+    } else {
+        state.teachers = currentTeachers;
+    }
+    
+    saveData({ teachers: state.teachers });
+    
+    // 2번 탭이 열려있으면 다시 렌더링
+    if (activeTab === 'tab2') {
+        renderTab2();
+    }
+}
 

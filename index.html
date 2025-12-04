@@ -149,6 +149,36 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- 6. 전담 교사 설정 -->
+                <div class="card">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-gray-800 flex items-center">
+                            <i class="fa-solid fa-user-tie text-purple-500 mr-2"></i>6. 전담 교사 설정
+                        </h2>
+                        <span class="text-xs text-gray-500">전담 교사 인원 수, 이름, 목표 시수를 설정하세요. (2단계 탭에 반영됩니다)</span>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4">
+                            <label class="text-sm font-bold text-gray-700">전담 교사 인원 수:</label>
+                            <input type="number" min="1" max="20" value="${state.teacherConfig?.count || state.teachers.length}" 
+                                   class="border rounded px-3 py-1 w-20 text-center font-bold" 
+                                   onchange="updateTeacherCount(this.value)" id="teacher-count-input">
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm border-collapse">
+                                <thead class="bg-gray-50 text-gray-700">
+                                    <tr>
+                                        <th class="p-2 border text-center w-16">번호</th>
+                                        <th class="p-2 border text-left">이름</th>
+                                        <th class="p-2 border text-center w-24">목표 시수</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="teacher-config-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- TAB 1: 시설 시간표 -->
