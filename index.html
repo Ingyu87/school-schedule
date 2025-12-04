@@ -98,24 +98,16 @@
                 </div>
                 <!-- 2-1. 시설 이름 설정 -->
                 <div class="card">
-                    <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                        <i class="fa-solid fa-building text-blue-500 mr-2"></i>2-1. 시설 이름 설정
-                    </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">체육관 이름</label>
-                            <input type="text" id="facility-name-gym-input" 
-                                   class="w-full border rounded px-3 py-2 text-sm" 
-                                   placeholder="예: 느티홀 (체육관)"
-                                   onchange="updateFacilityName('gym', this.value)">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">도서관 이름</label>
-                            <input type="text" id="facility-name-lib-input" 
-                                   class="w-full border rounded px-3 py-2 text-sm" 
-                                   placeholder="예: 글샘터 (도서관)"
-                                   onchange="updateFacilityName('lib', this.value)">
-                        </div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-gray-800 flex items-center">
+                            <i class="fa-solid fa-building text-blue-500 mr-2"></i>2-1. 시설 관리
+                        </h2>
+                        <button onclick="addNewFacility()" class="text-xs bg-blue-500 text-white hover:bg-blue-600 px-3 py-1.5 rounded font-bold">
+                            <i class="fa-solid fa-plus mr-1"></i>시설 추가
+                        </button>
+                    </div>
+                    <div id="facility-list-container" class="space-y-3">
+                        <!-- 동적으로 생성됨 -->
                     </div>
                 </div>
                 <!-- 3. 교육과정 시수표 -->
@@ -227,37 +219,8 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="card">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="font-bold text-gray-800"><i class="fa-solid fa-basketball text-orange-500 mr-2"></i><span id="facility-name-gym">느티홀 (체육관)</span></h3>
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs text-gray-400">반 입력 (예: 6-1) | 격주: 3-1,4-1 (쉼표로 구분)</span>
-                                <button onclick="downloadFacilityExcel('gym')" class="text-xs bg-green-500 text-white hover:bg-green-600 px-2 py-1 rounded">
-                                    <i class="fa-solid fa-file-excel mr-1"></i>저장
-                                </button>
-                                <button onclick="resetFacility('gym')" class="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded">
-                                    <i class="fa-solid fa-rotate-left mr-1"></i>초기화
-                                </button>
-                            </div>
-                        </div>
-                        <table class="base-table"><thead><tr><th class="w-16">교시</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th></tr></thead><tbody id="gym-grid"></tbody></table>
-                    </div>
-                    <div class="card">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="font-bold text-gray-800"><i class="fa-solid fa-book-open text-green-600 mr-2"></i><span id="facility-name-lib">글샘터 (도서관)</span></h3>
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs text-gray-400">반 입력 (예: 4-3) | 격주: 5-1,6-1 (쉼표로 구분)</span>
-                                <button onclick="downloadFacilityExcel('lib')" class="text-xs bg-green-500 text-white hover:bg-green-600 px-2 py-1 rounded">
-                                    <i class="fa-solid fa-file-excel mr-1"></i>저장
-                                </button>
-                                <button onclick="resetFacility('lib')" class="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded">
-                                    <i class="fa-solid fa-rotate-left mr-1"></i>초기화
-                                </button>
-                            </div>
-                        </div>
-                        <table class="base-table"><thead><tr><th class="w-16">교시</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th></tr></thead><tbody id="lib-grid"></tbody></table>
-                    </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="facility-timetables-container">
+                    <!-- 동적으로 생성됨 -->
                 </div>
             </div>
 

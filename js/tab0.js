@@ -5,6 +5,7 @@ function renderTab0() {
     renderClassConfig();
     renderScheduleTimes();
     renderFacilityNames();
+    renderFacilityList();
     renderCurriculum();
     renderTimeAllocationTable();
     renderCommonAllocations();
@@ -124,6 +125,7 @@ function renderScheduleTimes() {
 }
 
 function renderFacilityNames() {
+    // 기존 호환성을 위해 유지 (더 이상 사용되지 않음)
     if (!state.facilityNames) {
         state.facilityNames = {
             gym: '느티홀 (체육관)',
@@ -131,18 +133,72 @@ function renderFacilityNames() {
         };
     }
     
-    const gymInput = document.getElementById('facility-name-gym-input');
-    const libInput = document.getElementById('facility-name-lib-input');
-    
-    if (gymInput) {
-        gymInput.value = state.facilityNames.gym || '느티홀 (체육관)';
-    }
-    if (libInput) {
-        libInput.value = state.facilityNames.lib || '글샘터 (도서관)';
-    }
-    
     // 1번 탭의 시설 이름도 업데이트
     updateFacilityNameDisplay();
+}
+
+function renderFacilityList() {
+    if (!state.facilityList) {
+        state.facilityList = ['gym', 'lib'];
+    }
+    
+    // facilities와 facilityNames 초기화
+    if (!state.facilities) {
+        state.facilities = {};
+    }
+    if (!state.facilityNames) {
+        state.facilityNames = {};
+    }
+    
+    // facilityList에 있는 모든 시설이 facilities와 facilityNames에 있는지 확인
+    state.facilityList.forEach(facId => {
+        if (!state.facilities[facId]) {
+            state.facilities[facId] = grid(7, 5);
+        }
+        if (!state.facilityNames[facId]) {
+            // 기본값 설정
+            if (facId === 'gym') {
+                state.facilityNames[facId] = '느티홀 (체육관)';
+            } else if (facId === 'lib') {
+                state.facilityNames[facId] = '글샘터 (도서관)';
+            } else {
+                state.facilityNames[facId] = `시설${state.facilityList.indexOf(facId) + 1}`;
+            }
+        }
+    });
+    
+    const container = document.getElementById('facility-list-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    state.facilityList.forEach((facId, idx) => {
+        const facilityName = state.facilityNames[facId] || `시설${idx + 1}`;
+        const isDefault = facId === 'gym' || facId === 'lib';
+        const canDelete = !isDefault && state.facilityList.length > 2; // 기본 2개는 삭제 불가
+        
+        container.innerHTML += `
+            <div class="flex items-center gap-2 p-3 border rounded-lg bg-gray-50">
+                <div class="flex-1">
+                    <label class="block text-xs font-bold text-gray-600 mb-1">시설 ${idx + 1} 이름</label>
+                    <input type="text" 
+                           id="facility-name-input-${facId}"
+                           value="${facilityName}"
+                           class="w-full border rounded px-3 py-2 text-sm" 
+                           placeholder="예: 느티홀 (체육관)"
+                           onchange="updateFacilityName('${facId}', this.value)">
+                </div>
+                ${canDelete ? `
+                    <button onclick="removeFacility('${facId}')" 
+                            class="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-2 rounded text-sm font-bold"
+                            title="시설 삭제">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                ` : `
+                    <span class="text-xs text-gray-400 px-3 py-2" title="기본 시설은 삭제할 수 없습니다">기본</span>
+                `}
+            </div>`;
+    });
 }
 
 window.updateScheduleTime = function(gradeType, period, value) {
@@ -163,9 +219,75 @@ window.updateFacilityName = function(type, value) {
         state.facilityNames = { gym: '느티홀 (체육관)', lib: '글샘터 (도서관)' };
     }
     
-    state.facilityNames[type] = value.trim() || (type === 'gym' ? '느티홀 (체육관)' : '글샘터 (도서관)');
+    state.facilityNames[type] = value.trim() || `시설${state.facilityList.indexOf(type) + 1}`;
     saveData({ facilityNames: state.facilityNames });
     updateFacilityNameDisplay();
+    renderTab1(); // Tab 1도 업데이트
+};
+
+window.addNewFacility = function() {
+    if (!state.facilityList) {
+        state.facilityList = ['gym', 'lib'];
+    }
+    if (!state.facilities) {
+        state.facilities = {};
+    }
+    if (!state.facilityNames) {
+        state.facilityNames = {};
+    }
+    
+    // 새 시설 ID 생성 (fac1, fac2, ...)
+    let newId = 'fac1';
+    let counter = 1;
+    while (state.facilityList.includes(newId)) {
+        counter++;
+        newId = `fac${counter}`;
+    }
+    
+    state.facilityList.push(newId);
+    state.facilities[newId] = grid(7, 5);
+    state.facilityNames[newId] = `시설${state.facilityList.length}`;
+    
+    saveData({ 
+        facilityList: state.facilityList,
+        facilities: state.facilities,
+        facilityNames: state.facilityNames
+    });
+    
+    renderTab0();
+    renderTab1();
+    showAlert('새 시설이 추가되었습니다.', 'success');
+};
+
+window.removeFacility = function(facId) {
+    if (facId === 'gym' || facId === 'lib') {
+        showAlert('기본 시설(체육관, 도서관)은 삭제할 수 없습니다.', 'error');
+        return;
+    }
+    
+    if (state.facilityList.length <= 2) {
+        showAlert('최소 2개의 시설이 필요합니다.', 'error');
+        return;
+    }
+    
+    showConfirm(`"${state.facilityNames[facId]}" 시설을 삭제하시겠습니까?<br>이 시설의 시간표 데이터도 함께 삭제됩니다.`, () => {
+        const idx = state.facilityList.indexOf(facId);
+        if (idx >= 0) {
+            state.facilityList.splice(idx, 1);
+            delete state.facilities[facId];
+            delete state.facilityNames[facId];
+            
+            saveData({ 
+                facilityList: state.facilityList,
+                facilities: state.facilities,
+                facilityNames: state.facilityNames
+            });
+            
+            renderTab0();
+            renderTab1();
+            showAlert('시설이 삭제되었습니다.', 'success');
+        }
+    });
 };
 
 function updateFacilityNameDisplay() {

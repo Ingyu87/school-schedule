@@ -36,6 +36,7 @@ let state = {
         gym: '느티홀 (체육관)',
         lib: '글샘터 (도서관)'
     },
+    facilityList: ['gym', 'lib'], // 시설 ID 목록 (동적 추가 가능)
     scheduleTimes: {
         // 1~3학년 (점심 먼저)
         lower: {

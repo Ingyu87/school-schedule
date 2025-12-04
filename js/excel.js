@@ -148,20 +148,51 @@ function isJeondamSubject(gradeNum, classNum, subject, period, day) {
     return false;
 }
 
-// 시설 사용 확인 및 기호 반환
+// 시설 사용 확인 및 기호 반환 (동적 시설 지원)
 function getFacilitySymbol(gradeNum, classNum, period, day) {
     const classKey = `${gradeNum}-${classNum}`;
     
-    // 체육관 확인
-    const gymValue = state.facilities.gym[period][day] || '';
-    if (gymValue.includes(classKey)) {
-        return '◎'; // 체육관
+    // 시설 행 계산 (학급 시간표 행 → 시설 시간표 행)
+    let facRow = period;
+    if (period === 3) {
+        facRow = (gradeNum <= 3) ? 4 : 3;
+    } else if (period >= 4) {
+        facRow = period + 1;
     }
     
-    // 도서관 확인
-    const libValue = state.facilities.lib[period][day] || '';
-    if (libValue.includes(classKey)) {
-        return '◉'; // 도서관
+    if (state.facilityList) {
+        const symbols = [];
+        state.facilityList.forEach((facId, idx) => {
+            if (state.facilities[facId] && state.facilities[facId][facRow]) {
+                const facValue = state.facilities[facId][facRow][day] || '';
+                if (facValue.includes(classKey)) {
+                    // 기본 시설은 기존 기호 사용, 추가 시설은 숫자
+                    if (facId === 'gym') {
+                        symbols.push('◎');
+                    } else if (facId === 'lib') {
+                        symbols.push('◉');
+                    } else {
+                        symbols.push(`${idx + 1}`);
+                    }
+                }
+            }
+        });
+        return symbols.join('');
+    } else {
+        // 기존 호환성
+        if (state.facilities.gym && state.facilities.gym[facRow]) {
+            const gymValue = state.facilities.gym[facRow][day] || '';
+            if (gymValue.includes(classKey)) {
+                return '◎';
+            }
+        }
+        
+        if (state.facilities.lib && state.facilities.lib[facRow]) {
+            const libValue = state.facilities.lib[facRow][day] || '';
+            if (libValue.includes(classKey)) {
+                return '◉';
+            }
+        }
     }
     
     return '';

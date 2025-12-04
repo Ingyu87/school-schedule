@@ -851,18 +851,31 @@ function checkAllConflicts(classKey, row, col, source, sourceIdx) {
             facRow = row + 1;
         }
         
-        // 시설 배정 확인 (우선순위 1)
-        if (state.facilities.gym[facRow]) {
-            const gymVal = state.facilities.gym[facRow][col] || '';
-            if (checkFacilityAssignment(gymVal, cls)) {
-                return `${cls}은(는) 이 시간에 체육관에 배정되어 있습니다.`;
+        // 시설 배정 확인 (우선순위 1) - 동적 시설 지원
+        if (state.facilityList) {
+            for (const facId of state.facilityList) {
+                if (state.facilities[facId] && state.facilities[facId][facRow]) {
+                    const facVal = state.facilities[facId][facRow][col] || '';
+                    if (checkFacilityAssignment(facVal, cls)) {
+                        const facName = state.facilityNames[facId] || facId;
+                        return `${cls}은(는) 이 시간에 ${facName}에 배정되어 있습니다.`;
+                    }
+                }
             }
-        }
-        
-        if (state.facilities.lib[facRow]) {
-            const libVal = state.facilities.lib[facRow][col] || '';
-            if (checkFacilityAssignment(libVal, cls)) {
-                return `${cls}은(는) 이 시간에 도서관에 배정되어 있습니다.`;
+        } else {
+            // 기존 호환성 (facilityList가 없을 때)
+            if (state.facilities.gym && state.facilities.gym[facRow]) {
+                const gymVal = state.facilities.gym[facRow][col] || '';
+                if (checkFacilityAssignment(gymVal, cls)) {
+                    return `${cls}은(는) 이 시간에 체육관에 배정되어 있습니다.`;
+                }
+            }
+            
+            if (state.facilities.lib && state.facilities.lib[facRow]) {
+                const libVal = state.facilities.lib[facRow][col] || '';
+                if (checkFacilityAssignment(libVal, cls)) {
+                    return `${cls}은(는) 이 시간에 도서관에 배정되어 있습니다.`;
+                }
             }
         }
         

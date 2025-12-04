@@ -108,7 +108,7 @@ function renderEditorGrid() {
                 continue;
             }
             
-            // 시설 배정 확인
+            // 시설 배정 확인 (동적 시설 지원)
             let fac = '';
             let facRow = i;
             if (i === 3) {
@@ -117,11 +117,27 @@ function renderEditorGrid() {
                 facRow = i + 1;
             }
             
-            if (state.facilities.gym[facRow] && checkFacilityAssignment(state.facilities.gym[facRow][j], shortK)) {
-                fac = '체육(강당)';
-            }
-            if (state.facilities.lib[facRow] && checkFacilityAssignment(state.facilities.lib[facRow][j], shortK)) {
-                fac = fac ? fac + '+도서관' : '국어(도서관)';
+            if (state.facilityList) {
+                const assignedFacilities = [];
+                for (const facId of state.facilityList) {
+                    if (state.facilities[facId] && state.facilities[facId][facRow]) {
+                        if (checkFacilityAssignment(state.facilities[facId][facRow][j], shortK)) {
+                            const facName = state.facilityNames[facId] || facId;
+                            assignedFacilities.push(facName);
+                        }
+                    }
+                }
+                if (assignedFacilities.length > 0) {
+                    fac = assignedFacilities.join('+');
+                }
+            } else {
+                // 기존 호환성
+                if (state.facilities.gym && state.facilities.gym[facRow] && checkFacilityAssignment(state.facilities.gym[facRow][j], shortK)) {
+                    fac = '체육(강당)';
+                }
+                if (state.facilities.lib && state.facilities.lib[facRow] && checkFacilityAssignment(state.facilities.lib[facRow][j], shortK)) {
+                    fac = fac ? fac + '+도서관' : '국어(도서관)';
+                }
             }
             
             // 전담 교사 시간표에서 배정 확인 (보건 제외)
@@ -248,30 +264,52 @@ function countUse(k, s) {
         state.timetables[k].forEach(r => r.forEach(v => { if(v === s) c++; }));
     }
     
-    // 시설 배정 카운트
-    if(s === '체육') {
-        state.facilities.gym.forEach(r => {
-            if (r) r.forEach(v => {
-                if (v) {
-                    const classes = v.split('/').map(x => x.trim());
-                    if (classes.includes(sk)) {
-                        c += classes.length > 1 ? 0.5 : 1;
-                    }
-                }
-            });
+    // 시설 배정 카운트 (동적 시설 지원)
+    // 체육과 국어는 기본 시설(gym, lib)에만 해당하지만, 다른 시설도 확인
+    if (state.facilityList) {
+        state.facilityList.forEach(facId => {
+            if (state.facilities[facId]) {
+                state.facilities[facId].forEach(r => {
+                    if (r) r.forEach(v => {
+                        if (v) {
+                            const classes = v.split('/').map(x => x.trim());
+                            if (classes.includes(sk)) {
+                                // 체육은 gym, 국어는 lib에만 카운트 (기존 로직 유지)
+                                if ((s === '체육' && facId === 'gym') || (s === '국어' && facId === 'lib')) {
+                                    c += classes.length > 1 ? 0.5 : 1;
+                                }
+                            }
+                        }
+                    });
+                });
+            }
         });
-    }
-    if(s === '국어') {
-        state.facilities.lib.forEach(r => {
-            if (r) r.forEach(v => {
-                if (v) {
-                    const classes = v.split('/').map(x => x.trim());
-                    if (classes.includes(sk)) {
-                        c += classes.length > 1 ? 0.5 : 1;
+    } else {
+        // 기존 호환성
+        if(s === '체육' && state.facilities.gym) {
+            state.facilities.gym.forEach(r => {
+                if (r) r.forEach(v => {
+                    if (v) {
+                        const classes = v.split('/').map(x => x.trim());
+                        if (classes.includes(sk)) {
+                            c += classes.length > 1 ? 0.5 : 1;
+                        }
                     }
-                }
+                });
             });
-        });
+        }
+        if(s === '국어' && state.facilities.lib) {
+            state.facilities.lib.forEach(r => {
+                if (r) r.forEach(v => {
+                    if (v) {
+                        const classes = v.split('/').map(x => x.trim());
+                        if (classes.includes(sk)) {
+                            c += classes.length > 1 ? 0.5 : 1;
+                        }
+                    }
+                });
+            });
+        }
     }
     
     // 전담 교사 시간표에서 배정된 과목 카운트 (보건 제외)
@@ -390,9 +428,24 @@ function getFacilityRow(classRow, gradeNum) {
 
 function isFacilityAssigned(classRow, col, classKey, gradeNum) {
     const facRow = getFacilityRow(classRow, gradeNum);
-    const gymVal = state.facilities.gym[facRow] ? state.facilities.gym[facRow][col] : '';
-    const libVal = state.facilities.lib[facRow] ? state.facilities.lib[facRow][col] : '';
-    return checkFacilityAssignment(gymVal, classKey) || checkFacilityAssignment(libVal, classKey);
+    
+    // 동적 시설 지원
+    if (state.facilityList) {
+        for (const facId of state.facilityList) {
+            if (state.facilities[facId] && state.facilities[facId][facRow]) {
+                const facVal = state.facilities[facId][facRow][col] || '';
+                if (checkFacilityAssignment(facVal, classKey)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    } else {
+        // 기존 호환성
+        const gymVal = state.facilities.gym && state.facilities.gym[facRow] ? state.facilities.gym[facRow][col] : '';
+        const libVal = state.facilities.lib && state.facilities.lib[facRow] ? state.facilities.lib[facRow][col] : '';
+        return checkFacilityAssignment(gymVal, classKey) || checkFacilityAssignment(libVal, classKey);
+    }
 }
 
 function isTeacherAssigned(classRow, col, classKey) {
