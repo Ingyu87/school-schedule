@@ -90,16 +90,32 @@
                         </h2>
                         <table class="base-table">
                             <thead><tr><th class="w-16">구분</th><th>1~3학년 (점심 먼저)</th><th>4~6학년 (수업 먼저)</th></tr></thead>
-                            <tbody>
-                                <tr><td>1교시</td><td>09:00 ~ 09:40</td><td>09:00 ~ 09:40</td></tr>
-                                <tr><td>2교시</td><td>09:50 ~ 10:30</td><td>09:50 ~ 10:30</td></tr>
-                                <tr><td>3교시</td><td>10:40 ~ 11:20</td><td>10:40 ~ 11:20</td></tr>
-                                <tr><td class="font-bold text-indigo-700 bg-indigo-50">4교시</td><td class="font-bold text-indigo-700 bg-indigo-50">12:10 ~ 12:50<br><span class="text-xs font-normal text-gray-500">(점심 후)</span></td><td class="font-bold text-pink-700 bg-pink-50">11:30 ~ 12:10<br><span class="text-xs font-normal text-gray-500">(수업 후)</span></td></tr>
-                                <tr><td class="font-bold text-gray-600 bg-gray-50">점심</td><td class="bg-gray-50">11:20 ~ 12:10</td><td class="bg-gray-50">12:10 ~ 13:00</td></tr>
-                                <tr><td>5교시</td><td>13:00 ~ 13:40</td><td>13:00 ~ 13:40</td></tr>
-                                <tr><td>6교시</td><td>13:50 ~ 14:30 (3학년~)</td><td>13:50 ~ 14:30</td></tr>
+                            <tbody id="schedule-times-body">
+                                <!-- 동적으로 생성됨 -->
                             </tbody>
                         </table>
+                    </div>
+                </div>
+                <!-- 2-1. 시설 이름 설정 -->
+                <div class="card">
+                    <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fa-solid fa-building text-blue-500 mr-2"></i>2-1. 시설 이름 설정
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">체육관 이름</label>
+                            <input type="text" id="facility-name-gym-input" 
+                                   class="w-full border rounded px-3 py-2 text-sm" 
+                                   placeholder="예: 느티홀 (체육관)"
+                                   onchange="updateFacilityName('gym', this.value)">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">도서관 이름</label>
+                            <input type="text" id="facility-name-lib-input" 
+                                   class="w-full border rounded px-3 py-2 text-sm" 
+                                   placeholder="예: 글샘터 (도서관)"
+                                   onchange="updateFacilityName('lib', this.value)">
+                        </div>
                     </div>
                 </div>
                 <!-- 3. 교육과정 시수표 -->
@@ -214,7 +230,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="card">
                         <div class="flex justify-between items-center mb-3">
-                            <h3 class="font-bold text-gray-800"><i class="fa-solid fa-basketball text-orange-500 mr-2"></i>느티홀 (체육관)</h3>
+                            <h3 class="font-bold text-gray-800"><i class="fa-solid fa-basketball text-orange-500 mr-2"></i><span id="facility-name-gym">느티홀 (체육관)</span></h3>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs text-gray-400">반 입력 (예: 6-1) | 격주: 3-1,4-1 (쉼표로 구분)</span>
                                 <button onclick="downloadFacilityExcel('gym')" class="text-xs bg-green-500 text-white hover:bg-green-600 px-2 py-1 rounded">
@@ -229,7 +245,7 @@
                     </div>
                     <div class="card">
                         <div class="flex justify-between items-center mb-3">
-                            <h3 class="font-bold text-gray-800"><i class="fa-solid fa-book-open text-green-600 mr-2"></i>글샘터 (도서관)</h3>
+                            <h3 class="font-bold text-gray-800"><i class="fa-solid fa-book-open text-green-600 mr-2"></i><span id="facility-name-lib">글샘터 (도서관)</span></h3>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs text-gray-400">반 입력 (예: 4-3) | 격주: 5-1,6-1 (쉼표로 구분)</span>
                                 <button onclick="downloadFacilityExcel('lib')" class="text-xs bg-green-500 text-white hover:bg-green-600 px-2 py-1 rounded">

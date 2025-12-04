@@ -3,6 +3,8 @@
 function renderTab0() {
     renderDailyCounts();
     renderClassConfig();
+    renderScheduleTimes();
+    renderFacilityNames();
     renderCurriculum();
     renderTimeAllocationTable();
     renderCommonAllocations();
@@ -44,6 +46,140 @@ function renderClassConfig() {
             <input type="number" min="1" max="15" value="${count}" class="w-full text-center font-bold text-lg border-b outline-none" onchange="updateClassConfig('${gr}', this.value)">`;
         container.appendChild(div);
     });
+}
+
+function renderScheduleTimes() {
+    if (!state.scheduleTimes) {
+        state.scheduleTimes = {
+            lower: {
+                '1교시': '09:00 ~ 09:40',
+                '2교시': '09:50 ~ 10:30',
+                '3교시': '10:40 ~ 11:20',
+                '4교시': '12:10 ~ 12:50',
+                '점심': '11:20 ~ 12:10',
+                '5교시': '13:00 ~ 13:40',
+                '6교시': '13:50 ~ 14:30'
+            },
+            upper: {
+                '1교시': '09:00 ~ 09:40',
+                '2교시': '09:50 ~ 10:30',
+                '3교시': '10:40 ~ 11:20',
+                '4교시': '11:30 ~ 12:10',
+                '점심': '12:10 ~ 13:00',
+                '5교시': '13:00 ~ 13:40',
+                '6교시': '13:50 ~ 14:30'
+            }
+        };
+    }
+    
+    const tbody = document.getElementById('schedule-times-body');
+    if (!tbody) return;
+    
+    const periods = ['1교시', '2교시', '3교시', '4교시', '점심', '5교시', '6교시'];
+    
+    tbody.innerHTML = '';
+    periods.forEach((period, idx) => {
+        const lowerTime = state.scheduleTimes.lower[period] || '';
+        const upperTime = state.scheduleTimes.upper[period] || '';
+        
+        let rowClass = '';
+        let lowerCellClass = '';
+        let upperCellClass = '';
+        let lowerNote = '';
+        let upperNote = '';
+        
+        if (period === '4교시') {
+            rowClass = 'font-bold';
+            lowerCellClass = 'text-indigo-700 bg-indigo-50';
+            upperCellClass = 'text-pink-700 bg-pink-50';
+            lowerNote = '<br><span class="text-xs font-normal text-gray-500">(점심 후)</span>';
+            upperNote = '<br><span class="text-xs font-normal text-gray-500">(수업 후)</span>';
+        } else if (period === '점심') {
+            rowClass = 'font-bold text-gray-600 bg-gray-50';
+        } else if (period === '6교시') {
+            lowerNote = '<br><span class="text-xs font-normal text-gray-500">(3학년~)</span>';
+        }
+        
+        const periodLabel = period;
+        
+        tbody.innerHTML += `
+            <tr>
+                <td class="${rowClass}">${periodLabel}</td>
+                <td class="${lowerCellClass}">
+                    <input type="text" value="${lowerTime}" 
+                           class="w-full border-0 bg-transparent text-center ${period === '4교시' ? 'font-bold text-indigo-700' : ''}" 
+                           onchange="updateScheduleTime('lower', '${period}', this.value)"
+                           placeholder="예: 09:00 ~ 09:40">
+                    ${lowerNote}
+                </td>
+                <td class="${upperCellClass}">
+                    <input type="text" value="${upperTime}" 
+                           class="w-full border-0 bg-transparent text-center ${period === '4교시' ? 'font-bold text-pink-700' : ''}" 
+                           onchange="updateScheduleTime('upper', '${period}', this.value)"
+                           placeholder="예: 09:00 ~ 09:40">
+                    ${upperNote}
+                </td>
+            </tr>`;
+    });
+}
+
+function renderFacilityNames() {
+    if (!state.facilityNames) {
+        state.facilityNames = {
+            gym: '느티홀 (체육관)',
+            lib: '글샘터 (도서관)'
+        };
+    }
+    
+    const gymInput = document.getElementById('facility-name-gym-input');
+    const libInput = document.getElementById('facility-name-lib-input');
+    
+    if (gymInput) {
+        gymInput.value = state.facilityNames.gym || '느티홀 (체육관)';
+    }
+    if (libInput) {
+        libInput.value = state.facilityNames.lib || '글샘터 (도서관)';
+    }
+    
+    // 1번 탭의 시설 이름도 업데이트
+    updateFacilityNameDisplay();
+}
+
+window.updateScheduleTime = function(gradeType, period, value) {
+    if (!state.scheduleTimes) {
+        state.scheduleTimes = { lower: {}, upper: {} };
+    }
+    if (!state.scheduleTimes[gradeType]) {
+        state.scheduleTimes[gradeType] = {};
+    }
+    
+    state.scheduleTimes[gradeType][period] = value.trim();
+    saveData({ scheduleTimes: state.scheduleTimes });
+    renderScheduleTimes();
+};
+
+window.updateFacilityName = function(type, value) {
+    if (!state.facilityNames) {
+        state.facilityNames = { gym: '느티홀 (체육관)', lib: '글샘터 (도서관)' };
+    }
+    
+    state.facilityNames[type] = value.trim() || (type === 'gym' ? '느티홀 (체육관)' : '글샘터 (도서관)');
+    saveData({ facilityNames: state.facilityNames });
+    updateFacilityNameDisplay();
+};
+
+function updateFacilityNameDisplay() {
+    if (!state.facilityNames) return;
+    
+    const gymDisplay = document.getElementById('facility-name-gym');
+    const libDisplay = document.getElementById('facility-name-lib');
+    
+    if (gymDisplay) {
+        gymDisplay.textContent = state.facilityNames.gym || '느티홀 (체육관)';
+    }
+    if (libDisplay) {
+        libDisplay.textContent = state.facilityNames.lib || '글샘터 (도서관)';
+    }
 }
 
 function renderCurriculum() {

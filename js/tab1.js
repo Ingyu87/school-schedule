@@ -1,6 +1,9 @@
 // Tab 1: 시설 시간표
 
 function renderTab1() {
+    // 시설 이름 업데이트
+    updateFacilityNameDisplay();
+    
     ['gym', 'lib'].forEach(t => {
         if (!state.facilities[t] || state.facilities[t].length < 7) {
             state.facilities[t] = grid(7, 5);

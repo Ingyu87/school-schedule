@@ -191,9 +191,11 @@ function parseScheduleEntries(cellValue) {
 
 // 시설 시간표 엑셀 생성
 window.downloadFacilityExcel = function(type) {
+    // state에서 시설 이름 가져오기
+    const facilityFullName = state.facilityNames?.[type] || (type === 'gym' ? '느티홀 (체육관)' : '글샘터 (도서관)');
     const facilityName = type === 'gym' ? '체육관' : '도서관';
     const facilityNameEng = type === 'gym' ? '체육관' : '도서관';
-    const fileName = type === 'gym' ? '느티홀(체육관)' : '글샘터(도서관)';
+    const fileName = facilityFullName.replace(/[()]/g, ''); // 괄호 제거
     
     try {
         const wb = XLSX.utils.book_new();
