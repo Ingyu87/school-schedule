@@ -725,17 +725,20 @@ window.clickTeacherCell = function(teacherIdx, r, c, event) {
         );
         
         if (sameEntryIdx >= 0) {
+            // 같은 반-과목이면 삭제
             currentEntries.splice(sameEntryIdx, 1);
-        } else if (currentEntries.some(entry => entry.classKey === classKey)) {
-            showAlert('이미 배정된 반입니다. 다른 시간대를 선택하세요.');
-            return;
         } else {
-            if (!currentEntries.length) {
-                const conflict = checkAllConflicts(classKey, r, c, 'teacher', teacherIdx);
-                if (conflict) {
-                    showAlert(conflict);
-                    return;
-                }
+            // 한 시간에 두 개 클래스는 불가능 (시설 시간표만 가능)
+            if (currentEntries.length > 0) {
+                showAlert('한 시간에 두 개 클래스를 배정할 수 없습니다.<br>다른 시간대를 선택하거나 기존 배정을 삭제하세요.');
+                return;
+            }
+            
+            // 충돌 확인
+            const conflict = checkAllConflicts(classKey, r, c, 'teacher', teacherIdx);
+            if (conflict) {
+                showAlert(conflict);
+                return;
             }
             
             if (subject) {
@@ -765,7 +768,8 @@ window.clickTeacherCell = function(teacherIdx, r, c, event) {
                 }
             }
             
-            currentEntries.push({ classKey, subject });
+            // 한 개만 추가
+            currentEntries = [{ classKey, subject }];
         }
         
         setCell(currentEntries);
@@ -968,9 +972,9 @@ window.toggleTeacherTimetable = function(idx) {
             const ch = subjects[subj];
             const isDone = ch.current >= ch.target;
             const isOver = ch.current > ch.target;
-            // 완료되어도 보라색 테두리 유지 (다 채울 때까지)
+            // 완료되면 초록색 유지
             const bgClass = isOver ? 'bg-red-100 text-red-700 border-red-300' : 
-                           isDone ? 'bg-purple-50 text-purple-700 border-purple-400 border-2' : 
+                           isDone ? 'bg-green-100 text-green-700 border-green-300' : 
                            'bg-gray-50 text-gray-700 border-gray-200';
             const icon = ch.isSpecial ? '⭐' : '';
             paletteHtml += `
