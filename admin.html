@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 페이지</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gradient-to-br from-indigo-50 via-white to-purple-50 min-h-screen py-8">
+    <div class="max-w-6xl w-full mx-auto px-4">
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <!-- 헤더 -->
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                        <i class="fa-solid fa-shield-halved text-purple-600 mr-2"></i>관리자 페이지
+                    </h1>
+                    <p class="text-gray-600">등록된 학교 관리</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="window.location.href='school-select.html'" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                        <i class="fa-solid fa-school mr-2"></i>학교 선택
+                    </button>
+                    <button onclick="logout()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                        <i class="fa-solid fa-sign-out-alt mr-2"></i>로그아웃
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 검색 및 새로고침 -->
+            <div class="mb-6 flex gap-3">
+                <input 
+                    type="text" 
+                    id="school-search"
+                    class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition"
+                    placeholder="🔍 학교명으로 검색..."
+                    oninput="filterSchools()"
+                >
+                <button onclick="loadSchools()" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-bold">
+                    <i class="fa-solid fa-rotate mr-2"></i>새로고침
+                </button>
+            </div>
+            
+            <!-- 학교 목록 -->
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr class="bg-purple-100">
+                            <th class="border border-gray-300 px-4 py-3 text-left font-bold text-gray-900">학교명</th>
+                            <th class="border border-gray-300 px-4 py-3 text-left font-bold text-gray-900">등록일</th>
+                            <th class="border border-gray-300 px-4 py-3 text-left font-bold text-gray-900">비밀번호 해시</th>
+                            <th class="border border-gray-300 px-4 py-3 text-center font-bold text-gray-900">작업</th>
+                        </tr>
+                    </thead>
+                    <tbody id="school-list">
+                        <tr>
+                            <td colspan="4" class="border border-gray-300 px-4 py-8 text-center text-gray-500">
+                                <i class="fa-solid fa-spinner fa-spin mr-2"></i>로딩 중...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 통계 -->
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="text-sm text-blue-600 font-bold mb-1">총 등록 학교</div>
+                    <div class="text-2xl font-bold text-blue-900" id="total-schools">0</div>
+                </div>
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div class="text-sm text-green-600 font-bold mb-1">이번 달 등록</div>
+                    <div class="text-2xl font-bold text-green-900" id="month-schools">0</div>
+                </div>
+                <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <div class="text-sm text-purple-600 font-bold mb-1">오늘 등록</div>
+                    <div class="text-2xl font-bold text-purple-900" id="today-schools">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 비밀번호 초기화 모달 -->
+    <div id="reset-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">
+                <i class="fa-solid fa-key text-purple-600 mr-2"></i>비밀번호 초기화
+            </h3>
+            <p class="text-gray-700 mb-4">
+                <span id="reset-school-name" class="font-bold"></span>의 비밀번호를 초기화하시겠습니까?
+            </p>
+            <p class="text-sm text-gray-500 mb-4">
+                초기화 후 새 비밀번호를 설정할 수 있습니다.
+            </p>
+            <div class="mb-4">
+                <label class="block text-sm font-bold text-gray-700 mb-2">관리자 비밀번호</label>
+                <input 
+                    type="password" 
+                    id="admin-password"
+                    class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none"
+                    placeholder="관리자 비밀번호 입력"
+                >
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeResetModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                    취소
+                </button>
+                <button onclick="confirmResetPassword()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-bold">
+                    초기화
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Firebase 초기화 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyATebSC3BCAlTVUO_ybyg1OoIdqgBlxFBc",
+            authDomain: "school-schedule-d16bc.firebaseapp.com",
+            projectId: "school-schedule-d16bc",
+            storageBucket: "school-schedule-d16bc.firebasestorage.app",
+            messagingSenderId: "173998479308",
+            appId: "1:173998479308:web:b1ea6a69c743d838a5ef69",
+            measurementId: "G-NPPXKJCGGB"
+        };
+        
+        const firebaseApp = initializeApp(firebaseConfig);
+        window.firebaseDb = getFirestore(firebaseApp);
+        
+        // 관리자 권한 확인
+        const saved = localStorage.getItem('current_school');
+        if (!saved || JSON.parse(saved).name !== 'MASTER') {
+            // 관리자 비밀번호 확인
+            const adminPassword = prompt('관리자 비밀번호를 입력하세요:');
+            if (adminPassword !== '0307') {
+                alert('관리자 비밀번호가 올바르지 않습니다.');
+                window.location.href = 'login.html';
+            } else {
+                // 관리자 모드로 설정
+                localStorage.setItem('current_school', JSON.stringify({ name: 'MASTER', isMaster: true }));
+            }
+        }
+        
+        // 학교 목록 로드
+        loadSchools();
+    </script>
+    
+    <script>
+        let currentResetSchool = null;
+        
+        async function loadSchools() {
+            try {
+                const { collection, getDocs } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                const schoolsRef = collection(window.firebaseDb, 'schools');
+                const snapshot = await getDocs(schoolsRef);
+                
+                const schools = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    schools.push({
+                        id: doc.id,
+                        name: data.name || doc.id,
+                        passwordHash: data.passwordHash || '',
+                        createdAt: data.createdAt || ''
+                    });
+                });
+                
+                // 이름순 정렬
+                schools.sort((a, b) => a.name.localeCompare(b.name));
+                
+                renderSchools(schools);
+                updateStats(schools);
+            } catch (error) {
+                console.error('Load schools error:', error);
+                document.getElementById('school-list').innerHTML = 
+                    '<tr><td colspan="4" class="border border-gray-300 px-4 py-8 text-center text-red-500">학교 목록을 불러오는 중 오류가 발생했습니다.</td></tr>';
+            }
+        }
+        
+        function renderSchools(schools) {
+            const tbody = document.getElementById('school-list');
+            
+            if (schools.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="border border-gray-300 px-4 py-8 text-center text-gray-500">등록된 학교가 없습니다.</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = schools.map(school => {
+                const createdDate = school.createdAt ? new Date(school.createdAt).toLocaleString('ko-KR') : '-';
+                const hashDisplay = school.passwordHash ? 
+                    `<span class="font-mono text-xs">${school.passwordHash.substring(0, 16)}...</span>` : 
+                    '<span class="text-gray-400">없음</span>';
+                
+                return `
+                    <tr class="school-row hover:bg-gray-50">
+                        <td class="border border-gray-300 px-4 py-3 font-bold text-gray-900">${school.name}</td>
+                        <td class="border border-gray-300 px-4 py-3 text-gray-700">${createdDate}</td>
+                        <td class="border border-gray-300 px-4 py-3 text-gray-600">${hashDisplay}</td>
+                        <td class="border border-gray-300 px-4 py-3 text-center">
+                            <button 
+                                onclick="openResetModal('${school.id}', '${school.name.replace(/'/g, "\\'")}')" 
+                                class="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition text-sm font-bold"
+                            >
+                                <i class="fa-solid fa-key mr-1"></i>비밀번호 초기화
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function updateStats(schools) {
+            const total = schools.length;
+            const now = new Date();
+            const thisMonth = schools.filter(s => {
+                if (!s.createdAt) return false;
+                const created = new Date(s.createdAt);
+                return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+            }).length;
+            const today = schools.filter(s => {
+                if (!s.createdAt) return false;
+                const created = new Date(s.createdAt);
+                return created.toDateString() === now.toDateString();
+            }).length;
+            
+            document.getElementById('total-schools').textContent = total;
+            document.getElementById('month-schools').textContent = thisMonth;
+            document.getElementById('today-schools').textContent = today;
+        }
+        
+        window.filterSchools = function() {
+            const searchTerm = document.getElementById('school-search').value.toLowerCase();
+            const rows = document.querySelectorAll('.school-row');
+            
+            rows.forEach(row => {
+                const schoolName = row.querySelector('td:first-child').textContent.toLowerCase();
+                if (schoolName.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        };
+        
+        window.openResetModal = function(schoolId, schoolName) {
+            currentResetSchool = { id: schoolId, name: schoolName };
+            document.getElementById('reset-school-name').textContent = schoolName;
+            document.getElementById('admin-password').value = '';
+            document.getElementById('reset-modal').classList.remove('hidden');
+        };
+        
+        window.closeResetModal = function() {
+            document.getElementById('reset-modal').classList.add('hidden');
+            currentResetSchool = null;
+        };
+        
+        window.confirmResetPassword = async function() {
+            const adminPassword = document.getElementById('admin-password').value;
+            
+            if (adminPassword !== '0307') {
+                alert('관리자 비밀번호가 올바르지 않습니다.');
+                return;
+            }
+            
+            if (!currentResetSchool) return;
+            
+            // 새 비밀번호 입력
+            const newPassword = prompt(`${currentResetSchool.name}의 새 비밀번호를 입력하세요:`);
+            if (!newPassword) {
+                return;
+            }
+            
+            if (newPassword.length < 4) {
+                alert('비밀번호는 최소 4자 이상이어야 합니다.');
+                return;
+            }
+            
+            try {
+                // 비밀번호 해싱
+                const encoder = new TextEncoder();
+                const data = encoder.encode(newPassword);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const passwordHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                
+                // Firebase 업데이트
+                const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                const schoolRef = doc(window.firebaseDb, 'schools', currentResetSchool.id);
+                
+                await setDoc(schoolRef, {
+                    passwordHash: passwordHash,
+                    passwordResetAt: new Date().toISOString()
+                }, { merge: true });
+                
+                alert(`✅ ${currentResetSchool.name}의 비밀번호가 초기화되었습니다.\n\n새 비밀번호: ${newPassword}`);
+                closeResetModal();
+                loadSchools();
+                
+            } catch (error) {
+                console.error('Reset password error:', error);
+                alert('비밀번호 초기화 중 오류가 발생했습니다.');
+            }
+        };
+        
+        window.logout = function() {
+            if (confirm('로그아웃하시겠습니까?')) {
+                localStorage.removeItem('current_school');
+                window.location.href = 'login.html';
+            }
+        };
+        
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeResetModal();
+            }
+        });
+    </script>
+</body>
+</html>
+
