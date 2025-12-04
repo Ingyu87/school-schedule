@@ -48,6 +48,7 @@
     <!-- Firebase 초기화 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         const firebaseConfig = {
@@ -61,10 +62,18 @@
         };
         
         const firebaseApp = initializeApp(firebaseConfig);
+        window.firebaseAuth = getAuth(firebaseApp);
         window.firebaseDb = getFirestore(firebaseApp);
         
-        // 학교 목록 로드
-        loadSchools();
+        // 익명 인증 (Firebase 권한을 위해 필요)
+        try {
+            await signInAnonymously(window.firebaseAuth);
+            console.log('Firebase anonymous auth successful');
+            // 학교 목록 로드
+            loadSchools();
+        } catch (error) {
+            console.error('Firebase anonymous auth error:', error);
+        }
     </script>
     
     <script>

@@ -74,6 +74,7 @@
     <!-- Firebase 초기화 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         const firebaseConfig = {
@@ -87,7 +88,16 @@
         };
         
         const firebaseApp = initializeApp(firebaseConfig);
+        window.firebaseAuth = getAuth(firebaseApp);
         window.firebaseDb = getFirestore(firebaseApp);
+        
+        // 익명 인증 (Firebase 권한을 위해 필요)
+        try {
+            await signInAnonymously(window.firebaseAuth);
+            console.log('Firebase anonymous auth successful');
+        } catch (error) {
+            console.error('Firebase anonymous auth error:', error);
+        }
     </script>
     
     <!-- 유틸리티 함수 -->

@@ -128,6 +128,18 @@ window.logout = function() {
     }
 };
 
+// 관리자 페이지 접근 확인
+window.checkAdminAccess = function() {
+    const adminPassword = prompt('관리자 비밀번호를 입력하세요:');
+    if (adminPassword === '0307') {
+        // 관리자 모드로 설정
+        localStorage.setItem('current_school', JSON.stringify({ name: 'MASTER', isMaster: true }));
+        window.location.href = 'admin.html';
+    } else if (adminPassword !== null) {
+        alert('관리자 비밀번호가 올바르지 않습니다.');
+    }
+};
+
 // DOM 로드 후 실행
 document.addEventListener('DOMContentLoaded', init);
 

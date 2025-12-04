@@ -75,6 +75,7 @@ window.handleLogin = async function() {
                 // 직접 초기화 시도
                 try {
                     const { initializeApp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
+                    const { getAuth, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
                     const { getFirestore } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
                     
                     const firebaseConfig = {
@@ -88,11 +89,23 @@ window.handleLogin = async function() {
                     };
                     
                     const firebaseApp = initializeApp(firebaseConfig);
+                    window.firebaseAuth = getAuth(firebaseApp);
                     window.firebaseDb = getFirestore(firebaseApp);
+                    
+                    // 익명 인증
+                    if (!window.firebaseAuth.currentUser) {
+                        await signInAnonymously(window.firebaseAuth);
+                    }
                 } catch (initError) {
                     console.error('Firebase init error:', initError);
                     showAlert('Firebase 초기화 중 오류가 발생했습니다.', 'error');
                     return;
+                }
+            } else {
+                // firebaseDb는 있지만 인증이 안 되어 있을 수 있음
+                if (window.firebaseAuth && !window.firebaseAuth.currentUser) {
+                    const { signInAnonymously } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
+                    await signInAnonymously(window.firebaseAuth);
                 }
             }
         }
