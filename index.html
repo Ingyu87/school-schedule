@@ -55,16 +55,84 @@
                         </div>
                         <i id="help-tab0-icon" class="fa-solid fa-chevron-down text-indigo-600"></i>
                     </div>
-                    <div id="help-tab0" class="hidden mt-3 pt-3 border-t border-indigo-200 text-sm text-gray-700 space-y-2">
-                        <p><strong class="text-indigo-700">📌 이 탭의 목적:</strong> 시간표 작성을 위한 기본 정보를 설정합니다.</p>
-                        <div class="pl-4 space-y-1">
-                            <p><strong>1단계:</strong> 각 학년의 학급 수를 입력하세요. (예: 4학년 4개반 → 4 입력)</p>
-                            <p><strong>2단계:</strong> 교육과정 편제표는 기본값이 설정되어 있습니다. 필요시 수정하세요.</p>
-                            <p><strong>3단계:</strong> 교과 시간 배당표에서 목표 시수를 확인하세요.</p>
-                            <p><strong>4단계:</strong> 전담 교사가 담당할 과목을 추가하세요. (예: 4학년 영어 2시간)</p>
-                            <p><strong>5단계:</strong> 특수 지원 과목이 있다면 추가하세요.</p>
+                    <div id="help-tab0" class="hidden mt-3 pt-3 border-t border-indigo-200 text-sm text-gray-700 space-y-3">
+                        <p><strong class="text-indigo-700 text-base">📌 이 탭의 목적:</strong> 시간표 작성을 위한 기본 정보를 설정합니다. 모든 설정은 자동으로 저장됩니다.</p>
+                        
+                        <div class="bg-white rounded-lg p-4 border border-indigo-100 space-y-3">
+                            <div>
+                                <p class="font-bold text-indigo-800 mb-1">1️⃣ 학년별 학급 수 및 요일별 시수 설정</p>
+                                <div class="pl-4 text-sm space-y-1">
+                                    <p>• <strong>요일별 시수:</strong> 각 학년의 월~금요일별 수업 시수를 입력하세요. (예: 1학년 월요일 4교시)</p>
+                                    <p>• <strong>학급 수:</strong> 각 학년의 학급 수를 입력하세요. (예: 4학년 4개반 → "4" 입력)</p>
+                                    <p class="text-xs text-gray-500">💡 학급 수를 변경하면 시간표가 자동으로 초기화됩니다.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-indigo-800 mb-1">2️⃣ 일과 운영표 설정</p>
+                                <div class="pl-4 text-sm space-y-1">
+                                    <p>• 각 교시의 시작/종료 시간을 입력하세요. (예: 09:00 ~ 09:40)</p>
+                                    <p>• 1~3학년과 4~6학년의 시간표가 다를 수 있으니 각각 설정하세요.</p>
+                                    <p>• 4교시는 점심 시간에 따라 다르게 설정됩니다.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-indigo-800 mb-1">2-1️⃣ 시설 관리</p>
+                                <div class="pl-4 text-sm space-y-1">
+                                    <p>• <strong>기본 시설:</strong> 체육관과 도서관이 기본으로 설정되어 있습니다.</p>
+                                    <p>• <strong>시설 추가:</strong> "시설 추가" 버튼을 클릭하여 추가 시설을 등록할 수 있습니다. (예: 과학실, 음악실 등)</p>
+                                    <p>• <strong>시설 이름 변경:</strong> 각 시설의 이름을 원하는 대로 변경할 수 있습니다.</p>
+                                    <p>• <strong>시설 삭제:</strong> 기본 시설(체육관, 도서관) 외의 시설은 삭제할 수 있습니다.</p>
+                                    <p class="text-xs text-orange-600">⚠️ 시설에 배정된 시간은 전담 교사와 학급 시간표에서 자동으로 차단됩니다.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-indigo-800 mb-1">3️⃣ 교육과정 편제표</p>
+                                <div class="pl-4 text-sm space-y-1">
+                                    <p>• 각 학년별 과목의 주당 시수를 입력하세요. (예: 4학년 국어 5시간)</p>
+                                    <p>• 기본값이 설정되어 있지만, 학교 상황에 맞게 수정할 수 있습니다.</p>
+                                    <p>• 수정하면 자동으로 저장됩니다.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-indigo-800 mb-1">4️⃣ 교과 시간 배당표</p>
+                                <div class="pl-4 text-sm space-y-1">
+                                    <p>• 위에서 설정한 교육과정 시수를 기반으로 자동 계산됩니다.</p>
+                                    <p>• <strong>교과전담 지원 시수:</strong> 전담 교사가 담당할 시수를 입력하세요. (예: 4학년 3시간)</p>
+                                    <p>• <strong>보건 수업 지원:</strong> 보건 교사가 담당할 시수를 입력하세요. (예: 5학년 0.5시간)</p>
+                                    <p>• 최종 담임 교사 수업 시수가 자동으로 계산됩니다.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-indigo-800 mb-1">5️⃣ 학년별 공통 전담 과목 선택</p>
+                                <div class="pl-4 text-sm space-y-1">
+                                    <p>• <strong>과목 추가:</strong> 학년을 선택 → 과목 선택 → 시수 입력 → "추가" 버튼 클릭</p>
+                                    <p>• 예: 4학년 영어 2시간 → "4학년" 선택 → "영어" 선택 → "2" 입력 → "추가" 클릭</p>
+                                    <p>• <strong>과목 삭제:</strong> 추가된 과목 옆의 X 버튼을 클릭하세요.</p>
+                                    <p>• 현재/목표 시수를 확인하여 목표 시수에 맞게 과목을 추가하세요.</p>
+                                    <p class="text-xs text-gray-500">💡 보건은 전담 과목으로 추가할 수 없습니다. (시수만 반영)</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-indigo-800 mb-1">6️⃣ 전담 교사 설정</p>
+                                <div class="pl-4 text-sm space-y-1">
+                                    <p>• <strong>인원 수:</strong> 전담 교사 인원 수를 입력하세요. (1~20명)</p>
+                                    <p>• <strong>이름:</strong> 각 교사의 이름을 입력하세요. (예: 김영어, 이과학)</p>
+                                    <p>• <strong>목표 시수:</strong> 각 교사의 목표 수업 시수를 입력하세요. (기본: 21시간)</p>
+                                    <p>• 이 설정은 2단계 탭(전담 교사 시간표)에 반영됩니다.</p>
+                                </div>
+                            </div>
                         </div>
-                        <p class="text-indigo-600"><i class="fa-solid fa-lightbulb mr-1"></i><strong>완료 후:</strong> 상단의 "1단계 시설 시간표" 탭을 눌러 다음 단계로 이동하세요.</p>
+                        
+                        <div class="bg-indigo-50 rounded-lg p-3 border border-indigo-200">
+                            <p class="text-indigo-800 font-bold mb-1"><i class="fa-solid fa-arrow-right mr-1"></i>다음 단계</p>
+                            <p class="text-sm">모든 설정을 완료한 후, 상단의 <strong>"1. 시설 시간표"</strong> 탭을 클릭하여 다음 단계로 진행하세요.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -206,16 +274,85 @@
                         </div>
                         <i id="help-tab1-icon" class="fa-solid fa-chevron-down text-orange-600"></i>
                     </div>
-                    <div id="help-tab1" class="hidden mt-3 pt-3 border-t border-orange-200 text-sm text-gray-700 space-y-2">
-                        <p><strong class="text-orange-700">📌 이 탭의 목적:</strong> 체육관과 도서관 사용 시간을 먼저 배정합니다.</p>
-                        <div class="pl-4 space-y-1">
-                            <p><strong>입력 방법:</strong> 셀을 클릭하고 <strong>숫자를 직접 입력</strong>하세요. (예: <code class="bg-white px-1 rounded">41</code> 입력 → 자동으로 <code class="bg-white px-1 rounded">4-1</code>)</p>
-                            <p><strong>격주 배정:</strong> 쉼표 또는 스페이스로 구분하세요. (예: <code class="bg-white px-1 rounded">41,42</code> 또는 <code class="bg-white px-1 rounded">41 42</code> → <code class="bg-white px-1 rounded">4-1/4-2</code>)</p>
-                            <p><strong>4교시 주의:</strong> 분홍색(1~3학년), 파란색(4~6학년) 행을 구분해서 입력하세요.</p>
-                            <p><strong>편집 기능:</strong> 화살표 키로 이동, Ctrl+C/V로 복사/붙여넣기, 드래그로 이동 가능</p>
-                            <p class="text-xs text-orange-600">💡 <strong>이 탭만 숫자 직접 입력 방식입니다!</strong> 나머지 탭은 모두 버튼 클릭 방식입니다.</p>
+                    <div id="help-tab1" class="hidden mt-3 pt-3 border-t border-orange-200 text-sm text-gray-700 space-y-3">
+                        <p><strong class="text-orange-700 text-base">📌 이 탭의 목적:</strong> 시설(체육관, 도서관 등) 사용 시간을 먼저 배정합니다. 시설에 배정된 시간은 전담 교사와 학급 시간표에서 자동으로 차단됩니다.</p>
+                        
+                        <div class="bg-white rounded-lg p-4 border border-orange-100 space-y-3">
+                            <div>
+                                <p class="font-bold text-orange-800 mb-2">📝 기본 입력 방법 (이 탭만 숫자 직접 입력!)</p>
+                                <div class="pl-4 text-sm space-y-2">
+                                    <p><strong>1. 셀 클릭:</strong> 시간표의 셀을 클릭하세요.</p>
+                                    <p><strong>2. 숫자 입력:</strong> 학년과 반을 숫자로 입력하세요.</p>
+                                    <div class="bg-gray-50 p-2 rounded space-y-1">
+                                        <p>• <strong>예시 1:</strong> <code class="bg-white px-2 py-1 rounded border">41</code> 입력 → 자동으로 <code class="bg-white px-2 py-1 rounded border">4-1</code>로 변환</p>
+                                        <p>• <strong>예시 2:</strong> <code class="bg-white px-2 py-1 rounded border">63</code> 입력 → 자동으로 <code class="bg-white px-2 py-1 rounded border">6-3</code>로 변환</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-orange-800 mb-2">🔄 격주 배정 방법 (같은 시간에 여러 반 배정)</p>
+                                <div class="pl-4 text-sm space-y-2">
+                                    <p>• <strong>쉼표로 구분:</strong> 여러 반을 쉼표(,)로 구분하여 입력하세요.</p>
+                                    <p>• <strong>스페이스로 구분:</strong> 스페이스( )로도 구분할 수 있습니다.</p>
+                                    <div class="bg-gray-50 p-2 rounded space-y-1">
+                                        <p>• <strong>예시 1:</strong> <code class="bg-white px-2 py-1 rounded border">41,42</code> 입력 → <code class="bg-white px-2 py-1 rounded border">4-1/4-2</code>로 변환</p>
+                                        <p>• <strong>예시 2:</strong> <code class="bg-white px-2 py-1 rounded border">51 52</code> 입력 → <code class="bg-white px-2 py-1 rounded border">5-1/5-2</code>로 변환</p>
+                                        <p>• <strong>예시 3:</strong> <code class="bg-white px-2 py-1 rounded border">31,32,33</code> 입력 → <code class="bg-white px-2 py-1 rounded border">3-1/3-2/3-3</code>로 변환</p>
+                                    </div>
+                                    <p class="text-xs text-orange-600">💡 격주 배정은 시설 시간표에서만 가능합니다. 전담 교사와 학급 시간표에서는 불가능합니다.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-orange-800 mb-2">⚠️ 4교시 주의사항</p>
+                                <div class="pl-4 text-sm space-y-1">
+                                    <p>• <strong>분홍색 행 (4교시 1~3학년):</strong> 1학년, 2학년, 3학년만 입력하세요.</p>
+                                    <p>• <strong>파란색 행 (4교시 4~6학년):</strong> 4학년, 5학년, 6학년만 입력하세요.</p>
+                                    <p>• 잘못 입력하면 경고 메시지가 표시됩니다.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-orange-800 mb-2">⌨️ 편집 기능</p>
+                                <div class="pl-4 text-sm space-y-1">
+                                    <p>• <strong>화살표 키:</strong> 셀 간 이동 (↑↓←→)</p>
+                                    <p>• <strong>복사/붙여넣기:</strong> Ctrl+C (복사), Ctrl+V (붙여넣기)</p>
+                                    <p>• <strong>드래그 앤 드롭:</strong> 셀을 드래그하여 다른 셀로 이동</p>
+                                    <p>• <strong>삭제:</strong> 셀을 선택하고 Delete 키 또는 Backspace 키</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-orange-800 mb-2">🏢 시설 추가/삭제</p>
+                                <div class="pl-4 text-sm space-y-1">
+                                    <p>• <strong>시설 추가:</strong> 0번 탭의 "시설 관리" 섹션에서 "시설 추가" 버튼을 클릭하세요.</p>
+                                    <p>• <strong>시설 이름 변경:</strong> 0번 탭에서 각 시설의 이름을 수정할 수 있습니다.</p>
+                                    <p>• <strong>시설 삭제:</strong> 기본 시설(체육관, 도서관) 외의 시설은 삭제할 수 있습니다.</p>
+                                    <p>• 추가된 시설도 동일한 방법으로 시간표를 작성할 수 있습니다.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-orange-800 mb-2">💾 저장 및 초기화</p>
+                                <div class="pl-4 text-sm space-y-1">
+                                    <p>• <strong>저장:</strong> 각 시설의 "저장" 버튼을 클릭하면 엑셀 파일로 다운로드됩니다.</p>
+                                    <p>• <strong>초기화:</strong> "초기화" 버튼을 클릭하면 해당 시설의 시간표가 모두 지워집니다.</p>
+                                    <p>• 모든 데이터는 자동으로 저장되므로 별도 저장 버튼이 없습니다.</p>
+                                </div>
+                            </div>
                         </div>
-                        <p class="text-orange-600"><i class="fa-solid fa-lightbulb mr-1"></i><strong>완료 후:</strong> "2단계 전담 교사 시간표" 탭으로 이동하세요.</p>
+                        
+                        <div class="bg-orange-50 rounded-lg p-3 border border-orange-200">
+                            <p class="text-orange-800 font-bold mb-1"><i class="fa-solid fa-exclamation-triangle mr-1"></i>중요</p>
+                            <p class="text-sm mb-2">• <strong>이 탭만 숫자 직접 입력 방식입니다!</strong> 나머지 탭(전담 교사, 학급 시간표)은 모두 버튼 클릭 방식입니다.</p>
+                            <p class="text-sm">• 시설 시간표를 먼저 작성해야 전담 교사와 학급 시간표 작성 시 자동으로 충돌을 방지할 수 있습니다.</p>
+                        </div>
+                        
+                        <div class="bg-orange-50 rounded-lg p-3 border border-orange-200">
+                            <p class="text-orange-800 font-bold mb-1"><i class="fa-solid fa-arrow-right mr-1"></i>다음 단계</p>
+                            <p class="text-sm">시설 시간표 작성이 완료되면, 상단의 <strong>"2. 교과전담 교사별 시간표"</strong> 탭으로 이동하세요.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -235,20 +372,92 @@
                         </div>
                         <i id="help-tab2-icon" class="fa-solid fa-chevron-down text-purple-600"></i>
                     </div>
-                    <div id="help-tab2" class="hidden mt-3 pt-3 border-t border-purple-200 text-sm text-gray-700 space-y-2">
-                        <p><strong class="text-purple-700">📌 이 탭의 목적:</strong> 전담 교사를 추가하고 담당 과목과 시간표를 작성합니다.</p>
-                        <div class="pl-4 space-y-1">
-                            <p><strong>1단계:</strong> "교사 추가" 버튼을 눌러 전담 교사를 추가하세요.</p>
-                            <p><strong>2단계:</strong> 교사 이름을 입력하세요.</p>
-                            <p><strong>3단계:</strong> 과목 배정 버튼을 <strong>클릭</strong>하여 담당 학급과 과목을 선택하세요. (목표: 21시간)</p>
-                            <p><strong>4단계:</strong> "시간표" 버튼을 눌러 시간표 모달을 여세요.</p>
-                            <p><strong>5단계 (시간표 입력):</strong> 모달 오른쪽에서 <strong>"반-과목" 버튼을 클릭</strong>하세요. (예: "4-1 영어" 버튼)</p>
-                            <p><strong>6단계:</strong> 선택한 반-과목이 활성화되면, 시간표 셀을 <strong>클릭</strong>하여 배정하세요.</p>
-                            <p><strong>7단계:</strong> 시간표 완성 후 "완료" 체크박스를 선택하면 "저장" 버튼이 활성화됩니다.</p>
-                            <p class="text-xs text-purple-600 font-bold">💡 <strong>삭제 방법:</strong> 셀을 클릭하거나 Delete 키를 누르면 삭제됩니다.</p>
-                            <p class="text-xs text-gray-500">💡 <strong>주의:</strong> 시설 시간표와 달리 여기서는 숫자 직접 입력이 아닌 버튼 클릭 방식입니다! 격주 입력도 불가능합니다.</p>
+                    <div id="help-tab2" class="hidden mt-3 pt-3 border-t border-purple-200 text-sm text-gray-700 space-y-3">
+                        <p><strong class="text-purple-700 text-base">📌 이 탭의 목적:</strong> 전담 교사를 추가하고 담당 과목과 시간표를 작성합니다. 시설 시간표에 배정된 시간은 자동으로 차단됩니다.</p>
+                        
+                        <div class="bg-white rounded-lg p-4 border border-purple-100 space-y-3">
+                            <div>
+                                <p class="font-bold text-purple-800 mb-2">👥 전담 교사 설정 (0번 탭에서 먼저 설정)</p>
+                                <div class="pl-4 text-sm space-y-1">
+                                    <p>• 0번 탭의 "6. 전담 교사 설정"에서 인원 수, 이름, 목표 시수를 설정하세요.</p>
+                                    <p>• 설정한 교사들이 이 탭에 자동으로 표시됩니다.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-purple-800 mb-2">📋 1단계: 과목 배정하기</p>
+                                <div class="pl-4 text-sm space-y-2">
+                                    <p><strong>과목 배정 버튼 클릭:</strong> 각 교사 카드 하단의 "배정할 과목 클릭" 섹션에서 버튼을 클릭하세요.</p>
+                                    <div class="bg-gray-50 p-2 rounded space-y-1">
+                                        <p>• <strong>예시:</strong> "4-1 영어 (2h)" 버튼 클릭 → 4학년 1반 영어 2시간 배정</p>
+                                        <p>• <strong>배정 완료:</strong> 배정된 과목은 회색으로 표시되고 ✓ 표시가 나타납니다.</p>
+                                        <p>• <strong>배정 해제:</strong> 같은 버튼을 다시 클릭하면 배정이 해제됩니다.</p>
+                                    </div>
+                                    <p>• <strong>목표 시수 확인:</strong> 교사 카드 상단에서 현재 시수/목표 시수를 확인하세요.</p>
+                                    <p class="text-xs text-purple-600">💡 목표 시수에 도달하면 초록색으로 표시됩니다.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-purple-800 mb-2">📅 2단계: 시간표 작성하기</p>
+                                <div class="pl-4 text-sm space-y-2">
+                                    <p><strong>1. 시간표 모달 열기:</strong> 교사 카드의 <strong>"시간표"</strong> 버튼을 클릭하세요.</p>
+                                    <p><strong>2. 반-과목 선택:</strong> 모달 오른쪽의 <strong>"담당 반"</strong> 섹션에서 배정한 반-과목 버튼을 클릭하세요.</p>
+                                    <div class="bg-gray-50 p-2 rounded space-y-1">
+                                        <p>• <strong>예시:</strong> "4-1 영어" 버튼 클릭 → 보라색 테두리가 나타나면 선택 완료</p>
+                                        <p>• <strong>시수 확인:</strong> 각 버튼에 "현재/목표" 시수가 표시됩니다. (예: 0/2)</p>
+                                        <p>• <strong>완료 표시:</strong> 목표 시수에 도달하면 초록색으로 표시됩니다.</p>
+                                    </div>
+                                    <p><strong>3. 시간표 셀에 배정:</strong> 선택한 반-과목이 활성화된 상태에서 시간표의 셀을 클릭하세요.</p>
+                                    <div class="bg-gray-50 p-2 rounded space-y-1">
+                                        <p>• <strong>예시:</strong> "4-1 영어" 선택 → 월요일 1교시 셀 클릭 → "4-1(영어)" 입력됨</p>
+                                        <p>• <strong>자동 차단:</strong> 시설에 배정된 시간은 클릭해도 입력되지 않습니다.</p>
+                                        <p>• <strong>중복 방지:</strong> 같은 시간에 다른 교사에게 배정된 반은 입력할 수 없습니다.</p>
+                                    </div>
+                                    <p><strong>4. 시수 확인:</strong> 오른쪽 팔레트에서 각 반-과목의 현재/목표 시수를 확인하세요.</p>
+                                    <p><strong>5. 완료:</strong> 모든 반-과목의 목표 시수를 채우면 완료입니다.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-purple-800 mb-2">🗑️ 삭제 방법</p>
+                                <div class="pl-4 text-sm space-y-1">
+                                    <p>• <strong>방법 1:</strong> 시간표 셀을 클릭하면 해당 셀의 내용이 삭제됩니다.</p>
+                                    <p>• <strong>방법 2:</strong> 셀을 선택하고 Delete 키 또는 Backspace 키를 누르세요.</p>
+                                    <p>• <strong>과목 배정 해제:</strong> 교사 카드의 과목 배정 버튼을 다시 클릭하면 배정이 해제됩니다.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-purple-800 mb-2">⭐ 특수부장 지원 과목</p>
+                                <div class="pl-4 text-sm space-y-1">
+                                    <p>• 특정 학급에만 적용되는 특수 과목을 추가할 수 있습니다.</p>
+                                    <p>• 학년 → 반 → 과목 → 시수를 선택하고 "추가" 버튼을 클릭하세요.</p>
+                                    <p>• 추가된 특수 과목은 ⭐ 표시와 함께 과목 배정 목록에 나타납니다.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-purple-800 mb-2">💾 저장 및 완료</p>
+                                <div class="pl-4 text-sm space-y-1">
+                                    <p>• <strong>완료 체크:</strong> 시간표가 완성되면 교사 카드의 "완료" 체크박스를 선택하세요.</p>
+                                    <p>• <strong>개별 저장:</strong> "완료" 체크 후 "저장" 버튼이 활성화되면 클릭하여 엑셀 파일로 다운로드하세요.</p>
+                                    <p>• <strong>전체 저장:</strong> 모든 전담 교사가 완료되면 "전체 전담 시간표" 버튼으로 한 번에 저장할 수 있습니다.</p>
+                                </div>
+                            </div>
                         </div>
-                        <p class="text-purple-600"><i class="fa-solid fa-lightbulb mr-1"></i><strong>모든 전담 완료 후:</strong> "전체 전담 시간표" 버튼으로 전체 저장 가능</p>
+                        
+                        <div class="bg-purple-50 rounded-lg p-3 border border-purple-200">
+                            <p class="text-purple-800 font-bold mb-1"><i class="fa-solid fa-exclamation-triangle mr-1"></i>주의사항</p>
+                            <p class="text-sm mb-2">• <strong>버튼 클릭 방식:</strong> 시설 시간표와 달리 여기서는 숫자 직접 입력이 아닌 버튼 클릭 방식입니다!</p>
+                            <p class="text-sm mb-2">• <strong>격주 입력 불가:</strong> 한 셀에 하나의 반만 배정할 수 있습니다. (시설 시간표만 격주 가능)</p>
+                            <p class="text-sm">• <strong>시설 충돌:</strong> 시설 시간표에 배정된 시간은 자동으로 차단되므로 입력할 수 없습니다.</p>
+                        </div>
+                        
+                        <div class="bg-purple-50 rounded-lg p-3 border border-purple-200">
+                            <p class="text-purple-800 font-bold mb-1"><i class="fa-solid fa-arrow-right mr-1"></i>다음 단계</p>
+                            <p class="text-sm">모든 전담 교사 시간표가 완료되면, 상단의 <strong>"3. 학급 시간표"</strong> 탭으로 이동하세요.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -324,20 +533,107 @@
                         </div>
                         <i id="help-tab3-icon" class="fa-solid fa-chevron-down text-green-600"></i>
                     </div>
-                    <div id="help-tab3" class="hidden mt-3 pt-3 border-t border-green-200 text-sm text-gray-700 space-y-2">
-                        <p><strong class="text-green-700">📌 이 탭의 목적:</strong> 학급별로 담임 교사가 담당할 시간표를 작성합니다.</p>
-                        <div class="pl-4 space-y-1">
-                            <p><strong>1단계:</strong> 학년과 반을 선택하세요.</p>
-                            <p><strong>2단계:</strong> 오른쪽 팔레트에서 <strong>과목 버튼을 클릭</strong>하세요. (분홍색: 전담 과목 우선 배정)</p>
-                            <p><strong>3단계:</strong> 과목이 선택되면, 시간표 셀을 <strong>클릭</strong>하여 선택한 과목을 배정하세요.</p>
-                            <p><strong>자동 차단:</strong> 시설 배정, 전담 교사 시간은 자동으로 입력 불가</p>
-                            <p class="text-xs text-green-600 font-bold">💡 <strong>삭제 방법:</strong> 이미 입력된 셀을 다시 클릭하거나 Delete 키를 누르면 삭제됩니다.</p>
-                            <p><strong>자동 채우기:</strong> 남은 시간을 자동으로 배정합니다.</p>
-                            <p><strong>4단계:</strong> 완성 후 "완료" 체크박스를 선택하면 "저장" 버튼이 활성화됩니다.</p>
-                            <p class="text-xs text-gray-500">💡 <strong>주의:</strong> 여기서도 숫자 직접 입력이 아닌 버튼 클릭 방식입니다! 격주 입력도 불가능합니다.</p>
+                    <div id="help-tab3" class="hidden mt-3 pt-3 border-t border-green-200 text-sm text-gray-700 space-y-3">
+                        <p><strong class="text-green-700 text-base">📌 이 탭의 목적:</strong> 학급별로 담임 교사가 담당할 시간표를 작성합니다. 시설과 전담 교사에 배정된 시간은 자동으로 차단됩니다.</p>
+                        
+                        <div class="bg-red-50 rounded-lg p-3 border-2 border-red-200">
+                            <p class="text-red-700 font-bold mb-1"><i class="fa-solid fa-exclamation-triangle mr-1"></i>⚠️ 필수 조건</p>
+                            <p class="text-sm">모든 전담 교사 시간표가 완료되어야 이 탭에서 학급 시간표를 작성할 수 있습니다!</p>
+                            <p class="text-xs text-red-600 mt-1">→ 2번 탭에서 모든 전담 교사의 "완료" 체크박스를 선택해야 합니다.</p>
                         </div>
-                        <p class="text-red-600 font-bold"><i class="fa-solid fa-exclamation-triangle mr-1"></i><strong>⚠️ 중요:</strong> 모든 전담 교사 시간표가 완료되어야 이 탭에서 학급 시간표를 작성할 수 있습니다!</p>
-                        <p class="text-green-600"><i class="fa-solid fa-lightbulb mr-1"></i><strong>모든 학급 완료 후:</strong> 하단의 "전교 기준 시간표 생성" 버튼으로 최종 엑셀 다운로드</p>
+                        
+                        <div class="bg-white rounded-lg p-4 border border-green-100 space-y-3">
+                            <div>
+                                <p class="font-bold text-green-800 mb-2">📋 1단계: 학급 선택</p>
+                                <div class="pl-4 text-sm space-y-1">
+                                    <p>• 상단의 <strong>학년</strong> 드롭다운에서 학년을 선택하세요. (예: 4학년)</p>
+                                    <p>• <strong>반</strong> 드롭다운에서 반을 선택하세요. (예: 1반)</p>
+                                    <p>• 선택한 학급의 시간표가 표시됩니다.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-green-800 mb-2">🎨 2단계: 과목 선택하기</p>
+                                <div class="pl-4 text-sm space-y-2">
+                                    <p>• 오른쪽 <strong>"과목 팔레트"</strong>에서 과목 버튼을 클릭하세요.</p>
+                                    <div class="bg-gray-50 p-2 rounded space-y-1">
+                                        <p>• <strong>분홍색 섹션 (전담 과목):</strong> 전담 교사가 담당하는 과목입니다. 우선적으로 배정하세요.</p>
+                                        <p>• <strong>회색 섹션 (담임 과목):</strong> 담임 교사가 담당하는 과목입니다.</p>
+                                        <p>• 각 과목 버튼에 <strong>"현재/목표"</strong> 시수가 표시됩니다. (예: 2/5)</p>
+                                        <p>• 목표 시수에 도달하면 초록색으로 표시됩니다.</p>
+                                    </div>
+                                    <p>• 과목을 클릭하면 선택되며, 다시 클릭하면 선택이 해제됩니다.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-green-800 mb-2">📅 3단계: 시간표에 과목 배정하기</p>
+                                <div class="pl-4 text-sm space-y-2">
+                                    <p><strong>1. 과목 선택:</strong> 팔레트에서 과목 버튼을 클릭하여 선택하세요.</p>
+                                    <p><strong>2. 셀 클릭:</strong> 선택한 과목이 활성화된 상태에서 시간표의 셀을 클릭하세요.</p>
+                                    <div class="bg-gray-50 p-2 rounded space-y-1">
+                                        <p>• <strong>예시:</strong> "국어" 선택 → 월요일 1교시 셀 클릭 → "국어" 입력됨</p>
+                                        <p>• <strong>자동 차단:</strong> 다음 셀들은 자동으로 입력 불가 상태입니다:</p>
+                                        <div class="pl-4 space-y-1">
+                                            <p>- 시설에 배정된 시간 (예: 체육(강당), 국어(도서관))</p>
+                                            <p>- 전담 교사가 배정된 시간 (파란색으로 표시)</p>
+                                            <p>- 이미 입력된 셀 (다시 클릭하면 삭제됨)</p>
+                                        </div>
+                                    </div>
+                                    <p><strong>3. 시수 확인:</strong> 팔레트에서 각 과목의 현재/목표 시수를 확인하세요.</p>
+                                    <p><strong>4. 반복:</strong> 모든 과목의 목표 시수를 채울 때까지 반복하세요.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-green-800 mb-2">🗑️ 삭제 방법</p>
+                                <div class="pl-4 text-sm space-y-1">
+                                    <p>• <strong>방법 1:</strong> 이미 입력된 셀을 다시 클릭하면 삭제됩니다.</p>
+                                    <p>• <strong>방법 2:</strong> 셀을 선택하고 Delete 키 또는 Backspace 키를 누르세요.</p>
+                                    <p class="text-xs text-red-600">⚠️ 시설이나 전담 교사에 배정된 시간은 삭제할 수 없습니다.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-green-800 mb-2">✨ 자동 채우기 기능</p>
+                                <div class="pl-4 text-sm space-y-1">
+                                    <p>• <strong>"자동채우기"</strong> 버튼을 클릭하면 남은 시간에 담임 과목을 자동으로 배정합니다.</p>
+                                    <p>• 전담 과목은 자동 채우기에 포함되지 않습니다.</p>
+                                    <p>• 시설과 전담 교사 시간은 자동으로 건너뜁니다.</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-green-800 mb-2">💾 저장 및 완료</p>
+                                <div class="pl-4 text-sm space-y-1">
+                                    <p>• <strong>완료 체크:</strong> 시간표가 완성되면 상단의 <strong>"완료"</strong> 체크박스를 선택하세요.</p>
+                                    <p>• <strong>저장:</strong> "완료" 체크 후 <strong>"저장"</strong> 버튼이 활성화되면 클릭하여 엑셀 파일로 다운로드하세요.</p>
+                                    <p>• 저장된 파일 이름: <code class="bg-white px-1 rounded">4학년1반_시간표_2024-01-01.xlsx</code></p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="font-bold text-green-800 mb-2">📊 완료 현황 확인</p>
+                                <div class="pl-4 text-sm space-y-1">
+                                    <p>• 하단의 <strong>"학급 시간표 완료 현황"</strong>에서 모든 학급의 완료 상태를 확인할 수 있습니다.</p>
+                                    <p>• 학년별로 그룹화되어 표시됩니다.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-green-50 rounded-lg p-3 border border-green-200">
+                            <p class="text-green-800 font-bold mb-1"><i class="fa-solid fa-exclamation-triangle mr-1"></i>주의사항</p>
+                            <p class="text-sm mb-2">• <strong>버튼 클릭 방식:</strong> 시설 시간표와 달리 여기서는 숫자 직접 입력이 아닌 버튼 클릭 방식입니다!</p>
+                            <p class="text-sm mb-2">• <strong>격주 입력 불가:</strong> 한 셀에 하나의 과목만 배정할 수 있습니다. (시설 시간표만 격주 가능)</p>
+                            <p class="text-sm mb-2">• <strong>자동 차단:</strong> 시설과 전담 교사에 배정된 시간은 자동으로 차단되므로 입력할 수 없습니다.</p>
+                            <p class="text-sm">• <strong>목표 시수:</strong> 각 과목의 목표 시수를 초과하여 배정할 수 없습니다.</p>
+                        </div>
+                        
+                        <div class="bg-green-50 rounded-lg p-3 border border-green-200">
+                            <p class="text-green-800 font-bold mb-1"><i class="fa-solid fa-file-excel mr-1"></i>최종 엑셀 생성</p>
+                            <p class="text-sm mb-2">모든 전담 교사와 학급 시간표가 완료되면, 하단의 <strong>"전교 기준 시간표 생성"</strong> 버튼이 활성화됩니다.</p>
+                            <p class="text-sm">이 버튼을 클릭하면 모든 학급의 시간표가 포함된 통합 엑셀 파일을 다운로드할 수 있습니다.</p>
+                        </div>
                     </div>
                 </div>
 
