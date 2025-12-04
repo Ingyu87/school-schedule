@@ -13,6 +13,7 @@ const firebaseConfig = {
 const appId = 'gadong-schedule';
 let firebaseApp, firebaseAuth, firebaseDb;
 let isFirebaseEnabled = false;
+let currentSchoolName = null;
 
 // Firebase 초기화
 async function initFirebase() {
@@ -59,9 +60,29 @@ async function initFirebase() {
     return false;
 }
 
+// 현재 학교명 가져오기
+function getCurrentSchoolName() {
+    if (!currentSchoolName) {
+        const saved = localStorage.getItem('current_school');
+        if (saved) {
+            try {
+                const school = JSON.parse(saved);
+                currentSchoolName = school.name;
+            } catch (e) {
+                console.error('Failed to parse current_school:', e);
+                currentSchoolName = '가동초'; // 기본값
+            }
+        } else {
+            currentSchoolName = '가동초'; // 기본값 (마이그레이션용)
+        }
+    }
+    return currentSchoolName;
+}
+
 // Firebase 리스너 설정
 function setupFirebaseListener(doc, onSnapshot, setDoc) {
-    const docRef = doc(firebaseDb, 'artifacts', appId, 'public', 'data', 'schedules', 'gadong_2026');
+    const schoolName = getCurrentSchoolName();
+    const docRef = doc(firebaseDb, 'schools', schoolName, 'data', 'schedule');
     
     onSnapshot(docRef, (docSnap) => {
         if (docSnap.exists()) {
@@ -104,8 +125,9 @@ let isRetrying = false;
 async function saveData(data, isRetry = false) {
     showSync('saving');
     
-    // 로컬 스토리지에 항상 저장
-    localStorage.setItem('gadong_schedule_data', JSON.stringify(state));
+    // 로컬 스토리지에 항상 저장 (학교별로 분리)
+    const schoolName = getCurrentSchoolName();
+    localStorage.setItem(`school-${schoolName}-data`, JSON.stringify(state));
     
     if (!isFirebaseEnabled) {
         showSync('local');
@@ -127,7 +149,8 @@ async function saveData(data, isRetry = false) {
             }
         }
         
-        const docRef = doc(firebaseDb, 'artifacts', appId, 'public', 'data', 'schedules', 'gadong_2026');
+        const schoolName = getCurrentSchoolName();
+        const docRef = doc(firebaseDb, 'schools', schoolName, 'data', 'schedule');
         const payload = { ...data };
         
         if (payload.facilities) {
@@ -176,7 +199,17 @@ async function saveData(data, isRetry = false) {
 
 // 로컬 스토리지에서 로드
 function loadFromLocalStorage() {
-    const saved = localStorage.getItem('gadong_schedule_data');
+    const schoolName = getCurrentSchoolName();
+    // 먼저 학교별 데이터 시도
+    let saved = localStorage.getItem(`school-${schoolName}-data`);
+    // 없으면 기존 데이터 시도 (마이그레이션용)
+    if (!saved) {
+        saved = localStorage.getItem('gadong_schedule_data');
+        if (saved && schoolName === '가동초') {
+            // 마이그레이션: 기존 데이터를 새 키로 저장
+            localStorage.setItem(`school-${schoolName}-data`, saved);
+        }
+    }
     if (saved) {
         try {
             const data = JSON.parse(saved);
@@ -213,7 +246,8 @@ async function clearFirebaseData() {
     
     try {
         const { doc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-        const docRef = doc(firebaseDb, 'artifacts', appId, 'public', 'data', 'schedules', 'gadong_2026');
+        const schoolName = getCurrentSchoolName();
+        const docRef = doc(firebaseDb, 'schools', schoolName, 'data', 'schedule');
         await deleteDoc(docRef);
         console.log("Firebase data cleared");
     } catch (e) {

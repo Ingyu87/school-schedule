@@ -16,7 +16,7 @@
         <div class="max-w-[1800px] mx-auto px-4 h-14 flex items-center justify-between">
             <div class="flex items-center gap-2 mr-8">
                 <i class="fa-solid fa-school text-indigo-600 text-xl"></i>
-                <h1 class="text-lg font-bold text-gray-900 whitespace-nowrap">가동초 스마트 스케줄러 2026</h1>
+                <h1 class="text-lg font-bold text-gray-900 whitespace-nowrap"><span id="school-name-display">학교</span> 스마트 스케줄러 2026</h1>
                 <span id="sync-indicator" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-500 ml-2">
                     <i class="fa-solid fa-cloud"></i> 대기중
                 </span>
@@ -28,6 +28,9 @@
                 <button onclick="switchTab('tab3')" id="btn-tab3" class="tab-btn">3. 학급 시간표</button>
             </div>
             <div class="flex items-center gap-2">
+                <button onclick="logout()" class="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded border border-gray-200 hover:bg-gray-200 font-bold">
+                    <i class="fa-solid fa-sign-out-alt mr-1"></i>로그아웃
+                </button>
                 <button onclick="resetAllData()" class="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded border border-red-200 hover:bg-red-100 font-bold">
                     <i class="fa-solid fa-exclamation-triangle mr-1"></i>전체 초기화
                 </button>
@@ -444,6 +447,7 @@
     <script src="js/state.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/firebase.js"></script>
+    <script src="js/auth.js"></script>
     <script src="js/tab0.js"></script>
     <script src="js/tab1.js"></script>
     <script src="js/tab2.js"></script>

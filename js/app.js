@@ -77,6 +77,29 @@ function updateTabAccessibility() {
 
 // 초기화
 async function init() {
+    // 로그인 체크
+    const saved = localStorage.getItem('current_school');
+    if (!saved) {
+        // 로그인 안 되어 있으면 로그인 페이지로
+        window.location.href = 'login.html';
+        return;
+    }
+    
+    const school = JSON.parse(saved);
+    // firebase.js의 currentSchoolName 업데이트
+    if (typeof getCurrentSchoolName === 'function') {
+        // getCurrentSchoolName이 있으면 사용
+    } else {
+        // 전역 변수로 설정
+        window.currentSchoolName = school.name;
+    }
+    
+    // 헤더에 학교명 표시
+    const schoolNameDisplay = document.getElementById('school-name-display');
+    if (schoolNameDisplay) {
+        schoolNameDisplay.textContent = school.name;
+    }
+    
     // Firebase 초기화 시도
     const firebaseLoaded = await initFirebase();
     
@@ -88,6 +111,14 @@ async function init() {
         showSync('local');
     }
 }
+
+// 로그아웃 함수
+window.logout = function() {
+    if (confirm('로그아웃하시겠습니까?')) {
+        localStorage.removeItem('current_school');
+        window.location.href = 'login.html';
+    }
+};
 
 // DOM 로드 후 실행
 document.addEventListener('DOMContentLoaded', init);
