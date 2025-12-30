@@ -57,6 +57,7 @@ function renderTab1() {
             gridHtml += '</tr>';
         }
         
+        const isFacilityCompleted = state.facilityCompletion?.[facId] || false;
         const cardHtml = `
             <div class="card">
                 <div class="flex justify-between items-center mb-3">
@@ -66,6 +67,10 @@ function renderTab1() {
                     </h3>
                     <div class="flex items-center gap-2">
                         <span class="text-xs text-gray-400">반 입력 (예: 6-1) | 격주: 3-1,4-1 (쉼표로 구분)</span>
+                        <label class="flex items-center cursor-pointer bg-green-50 border border-green-300 px-3 py-1 rounded text-xs hover:bg-green-100 transition ${isFacilityCompleted ? 'bg-green-100 border-green-500' : ''}" id="facility-${facId}-completion-label">
+                            <input type="checkbox" onchange="toggleFacilityCompletion('${facId}')" class="mr-2" id="facility-${facId}-completed-checkbox" ${isFacilityCompleted ? 'checked' : ''}>
+                            <span class="text-green-700 font-bold">완료</span>
+                        </label>
                         <button onclick="downloadFacilityExcel('${facId}')" class="text-xs bg-green-500 text-white hover:bg-green-600 px-2 py-1 rounded">
                             <i class="fa-solid fa-file-excel mr-1"></i>저장
                         </button>
@@ -165,11 +170,25 @@ function updateFacilityNameDisplay() {
 
 // Tab 1 완료 상태 UI 업데이트
 function updateTab1CompletionUI() {
+    // 모든 시설 완료 여부 확인
+    const allFacilitiesCompleted = checkAllFacilitiesCompleted();
+    
+    // Tab 1 완료 상태 자동 업데이트
+    if (allFacilitiesCompleted && !state.tabCompletion?.tab1) {
+        state.tabCompletion = state.tabCompletion || {};
+        state.tabCompletion.tab1 = true;
+        saveData({ tabCompletion: state.tabCompletion });
+    } else if (!allFacilitiesCompleted && state.tabCompletion?.tab1) {
+        state.tabCompletion.tab1 = false;
+        saveData({ tabCompletion: state.tabCompletion });
+    }
+    
     const checkbox = document.getElementById('tab1-completed-checkbox');
     const label = document.getElementById('tab1-completion-label');
     if (checkbox && label) {
         const isCompleted = state.tabCompletion?.tab1 || false;
         checkbox.checked = isCompleted;
+        checkbox.disabled = !allFacilitiesCompleted; // 모든 시설이 완료되어야만 활성화
         if (isCompleted) {
             label.classList.remove('bg-green-50', 'border-green-300');
             label.classList.add('bg-green-100', 'border-green-500');
@@ -177,8 +196,61 @@ function updateTab1CompletionUI() {
             label.classList.remove('bg-green-100', 'border-green-500');
             label.classList.add('bg-green-50', 'border-green-300');
         }
+        if (!allFacilitiesCompleted) {
+            label.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            label.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
     }
 }
+
+// 모든 시설 완료 여부 확인
+function checkAllFacilitiesCompleted() {
+    if (!state.facilityList || state.facilityList.length === 0) {
+        return false;
+    }
+    
+    return state.facilityList.every(facId => {
+        return state.facilityCompletion?.[facId] === true;
+    });
+}
+
+// 시설별 완료 토글
+window.toggleFacilityCompletion = function(facId) {
+    const checkbox = document.getElementById(`facility-${facId}-completed-checkbox`);
+    if (!checkbox) return;
+    
+    state.facilityCompletion = state.facilityCompletion || {};
+    state.facilityCompletion[facId] = checkbox.checked;
+    
+    // 저장
+    saveData({ facilityCompletion: state.facilityCompletion });
+    
+    // 체크박스 스타일 업데이트
+    const label = document.getElementById(`facility-${facId}-completion-label`);
+    if (label) {
+        if (checkbox.checked) {
+            label.classList.remove('bg-green-50', 'border-green-300');
+            label.classList.add('bg-green-100', 'border-green-500');
+        } else {
+            label.classList.remove('bg-green-100', 'border-green-500');
+            label.classList.add('bg-green-50', 'border-green-300');
+        }
+    }
+    
+    // Tab 1 완료 상태 업데이트
+    updateTab1CompletionUI();
+    
+    // 탭 활성화 상태 업데이트
+    if (typeof updateTabAccessibility === 'function') {
+        updateTabAccessibility();
+    }
+    
+    // 모든 시설이 완료되면 알림
+    if (checkAllFacilitiesCompleted()) {
+        showAlert('모든 시설 시간표가 완료되었습니다. 이제 "2. 교과전담 교사별 시간표" 탭을 사용할 수 있습니다.', 'success');
+    }
+};
 
 window.resetFacility = function(type) {
     const name = state.facilityNames?.[type] || (type === 'gym' ? '체육관' : type === 'lib' ? '도서관' : '시설');

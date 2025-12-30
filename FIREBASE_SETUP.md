@@ -42,7 +42,7 @@ service cloud.firestore {
 ## 4. Vercel 환경변수 (선택사항)
 현재는 Firebase 설정이 하드코딩되어 있어서 Vercel 환경변수 변경은 **필요 없습니다**.
 
-만약 보안을 강화하고 싶다면:
+만약 보안을 더 강화하고 싶다면:
 1. Vercel 대시보드 → 프로젝트 → Settings → Environment Variables
 2. 다음 변수 추가:
    - `VITE_FIREBASE_API_KEY`
@@ -51,6 +51,9 @@ service cloud.firestore {
    - 등등...
 
 하지만 현재는 **변경할 필요 없습니다**.
+
+## 6. 보안 점검
+자세한 보안 설정은 `SECURITY.md` 파일을 참고하세요.
 
 
 

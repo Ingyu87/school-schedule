@@ -370,8 +370,9 @@
                         
                         <div class="bg-orange-50 rounded-lg p-3 border border-orange-200">
                             <p class="text-orange-800 font-bold mb-1"><i class="fa-solid fa-arrow-right mr-1"></i>다음 단계</p>
-                            <p class="text-sm mb-2">시설 시간표 작성이 완료되면, <strong>맨 아래의 "시설 시간표 전체 완료"</strong> 버튼을 클릭하세요.</p>
-                            <p class="text-sm">완료 버튼을 누르면 <strong>"2. 교과전담 교사별 시간표"</strong> 탭이 활성화됩니다.</p>
+                            <p class="text-sm mb-2">각 시설의 <strong>"완료"</strong> 체크박스를 클릭하세요.</p>
+                            <p class="text-sm mb-2">모든 시설이 완료되면 자동으로 <strong>"2. 교과전담 교사별 시간표"</strong> 탭이 활성화됩니다.</p>
+                            <p class="text-sm">맨 아래의 "시설 시간표 전체 완료" 버튼은 모든 시설이 완료되면 자동으로 체크됩니다.</p>
                         </div>
                     </div>
                 </div>
@@ -387,10 +388,11 @@
                             <h2 class="text-lg font-bold text-orange-900 flex items-center mb-2">
                                 <i class="fa-solid fa-check-circle text-orange-500 mr-2"></i>시설 시간표 전체 완료
                             </h2>
-                            <p class="text-sm text-orange-700">모든 시설 시간표 작성이 완료되었으면 아래 버튼을 클릭하여 다음 단계로 진행하세요.</p>
+                            <p class="text-sm text-orange-700 mb-1">각 시설의 "완료" 체크박스를 모두 선택하면 자동으로 완료됩니다.</p>
+                            <p class="text-xs text-orange-600">💡 모든 시설이 완료되면 아래 버튼이 자동으로 체크되고, "2. 교과전담 교사별 시간표" 탭이 활성화됩니다.</p>
                         </div>
-                        <label class="flex items-center cursor-pointer bg-green-50 border-2 border-green-300 px-6 py-3 rounded-lg text-base hover:bg-green-100 transition font-bold shadow-lg" id="tab1-completion-label">
-                            <input type="checkbox" onchange="toggleTab1Completion()" class="mr-3 w-5 h-5" id="tab1-completed-checkbox">
+                        <label class="flex items-center cursor-pointer bg-green-50 border-2 border-green-300 px-6 py-3 rounded-lg text-base hover:bg-green-100 transition font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" id="tab1-completion-label">
+                            <input type="checkbox" onchange="toggleTab1Completion()" class="mr-3 w-5 h-5" id="tab1-completed-checkbox" disabled>
                             <span class="text-green-700">
                                 <i class="fa-solid fa-check-double mr-2"></i>시설 시간표 완료
                             </span>

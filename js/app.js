@@ -43,6 +43,17 @@ function updateTabAccessibility() {
         }
     }
     
+    // Tab 1 완료 상태는 모든 시설이 완료되면 자동으로 완료됨
+    if (tab0Completed && typeof checkAllFacilitiesCompleted === 'function') {
+        const allFacilitiesCompleted = checkAllFacilitiesCompleted();
+        if (allFacilitiesCompleted && !tab1Completed) {
+            state.tabCompletion = state.tabCompletion || {};
+            state.tabCompletion.tab1 = true;
+            saveData({ tabCompletion: state.tabCompletion });
+            tab1Completed = true;
+        }
+    }
+    
     // Tab 2 (교과전담 교사별 시간표) 활성화/비활성화
     const tab2Btn = document.getElementById('btn-tab2');
     if (tab2Btn) {
@@ -298,10 +309,18 @@ window.toggleTab0Completion = function() {
     }
 };
 
-// Tab 1 완료 토글
+// Tab 1 완료 토글 (수동으로는 변경 불가, 모든 시설 완료 시 자동 완료)
 window.toggleTab1Completion = function() {
+    // 모든 시설이 완료되어야만 수동 변경 가능 (하지만 일반적으로는 자동으로 완료됨)
     const checkbox = document.getElementById('tab1-completed-checkbox');
     if (!checkbox) return;
+    
+    // 모든 시설이 완료되었는지 확인
+    if (typeof checkAllFacilitiesCompleted === 'function' && !checkAllFacilitiesCompleted()) {
+        showAlert('모든 시설의 "완료" 체크박스를 선택해야 합니다.', 'warning');
+        checkbox.checked = false;
+        return;
+    }
     
     state.tabCompletion = state.tabCompletion || {};
     state.tabCompletion.tab1 = checkbox.checked;
@@ -322,10 +341,6 @@ window.toggleTab1Completion = function() {
             label.classList.remove('bg-green-100', 'border-green-500');
             label.classList.add('bg-green-50', 'border-green-300');
         }
-    }
-    
-    if (checkbox.checked) {
-        showAlert('시설 시간표가 완료되었습니다. 이제 "2. 교과전담 교사별 시간표" 탭을 사용할 수 있습니다.', 'success');
     }
 };
 
