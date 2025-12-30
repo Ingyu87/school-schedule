@@ -86,14 +86,26 @@ function getCurrentSchoolName() {
 
 // Firebase 리스너 설정
 let isInitialLoad = true; // 초기 로드 여부 추적
+let isSaving = false; // 저장 중 플래그 (무한 루프 방지)
+let lastSavedTimestamp = 0; // 마지막으로 저장한 타임스탬프
 function setupFirebaseListener(doc, onSnapshot, setDoc) {
     const schoolName = getCurrentSchoolName();
     const docRef = doc(firebaseDb, 'schools', schoolName, 'data', 'schedule');
     
     onSnapshot(docRef, (docSnap) => {
+        // 저장 중이면 리스너 무시 (무한 루프 방지)
+        if (isSaving) {
+            return;
+        }
+        
         if (docSnap.exists()) {
             const firebaseData = docSnap.data();
             const firebaseTimestamp = firebaseData._lastSaved || 0;
+            
+            // 우리가 방금 저장한 데이터면 무시
+            if (firebaseTimestamp === lastSavedTimestamp && lastSavedTimestamp > 0) {
+                return;
+            }
             
             // 로컬 스토리지에서 최신 데이터 확인
             const localDataStr = localStorage.getItem(`school-${schoolName}-data`);
@@ -110,21 +122,19 @@ function setupFirebaseListener(doc, onSnapshot, setDoc) {
             }
             
             // 로컬 데이터가 더 최신이면 로컬 데이터를 사용하고 Firebase에 저장
-            if (localTimestamp > firebaseTimestamp && localData) {
+            if (localTimestamp > firebaseTimestamp && localData && isInitialLoad) {
                 console.log('Local data is newer, saving to Firebase...');
                 // 로컬 데이터를 state에 적용 (_lastSaved 필드 제거)
                 const { _lastSaved, ...dataToApply } = localData;
                 Object.assign(state, dataToApply);
                 // Firebase에 저장 (재귀 방지를 위해 플래그 사용)
-                if (isInitialLoad) {
-                    isInitialLoad = false;
-                    saveData(state).then(() => {
-                        initTimetables();
-                        renderCurrentTab();
-                    });
-                    return;
-                }
-            } else {
+                isInitialLoad = false;
+                saveData(state).then(() => {
+                    initTimetables();
+                    renderCurrentTab();
+                });
+                return;
+            } else if (firebaseTimestamp >= localTimestamp) {
                 // Firebase 데이터가 더 최신이거나 같으면 Firebase 데이터 사용
                 const data = firebaseData;
                 if(data.config) state.config = data.config;
@@ -160,16 +170,16 @@ function setupFirebaseListener(doc, onSnapshot, setDoc) {
                 if(data.facilityList) state.facilityList = data.facilityList;
                 if(data.timetableCompletion) state.timetableCompletion = data.timetableCompletion;
                 
-                // 로컬 스토리지에도 저장 (동기화)
+                // 로컬 스토리지에도 저장 (동기화) - 하지만 타임스탬프는 Firebase 것 사용
                 localStorage.setItem(`school-${schoolName}-data`, JSON.stringify({
                     ...state,
                     _lastSaved: firebaseTimestamp
                 }));
+                
+                isInitialLoad = false;
+                initTimetables();
+                renderCurrentTab();
             }
-            
-            isInitialLoad = false;
-            initTimetables();
-            renderCurrentTab();
         } else {
             // Firebase에 데이터가 없으면 로컬 데이터를 Firebase에 저장
             if (isInitialLoad) {
@@ -184,6 +194,12 @@ function setupFirebaseListener(doc, onSnapshot, setDoc) {
 let isRetrying = false;
 let savePromise = null; // 현재 저장 작업 추적
 async function saveData(data, isRetry = false) {
+    // 이미 저장 중이면 무시 (중복 저장 방지)
+    if (isSaving && !isRetry) {
+        return Promise.resolve();
+    }
+    
+    isSaving = true;
     showSync('saving');
     
     // 부분 업데이트가 아닌 전체 state를 저장하도록 수정
@@ -208,16 +224,21 @@ async function saveData(data, isRetry = false) {
     // _lastSaved 필드 제거 (state에 포함되지 않도록)
     delete fullData._lastSaved;
     
+    // 타임스탬프 생성
+    const currentTimestamp = Date.now();
+    lastSavedTimestamp = currentTimestamp;
+    
     // 로컬 스토리지에 항상 저장 (학교별로 분리)
     const schoolName = getCurrentSchoolName();
     // 전체 state를 저장 (타임스탬프 추가)
     const dataWithTimestamp = {
         ...fullData,
-        _lastSaved: Date.now()
+        _lastSaved: currentTimestamp
     };
     localStorage.setItem(`school-${schoolName}-data`, JSON.stringify(dataWithTimestamp));
     
     if (!isFirebaseEnabled) {
+        isSaving = false;
         showSync('local');
         return Promise.resolve();
     }
@@ -232,6 +253,7 @@ async function saveData(data, isRetry = false) {
                 await signInAnonymously(firebaseAuth);
             } catch (authError) {
                 console.error("Authentication error:", authError);
+                isSaving = false;
                 showSync('error');
                 return Promise.reject(authError);
             }
@@ -242,7 +264,7 @@ async function saveData(data, isRetry = false) {
         const payload = { ...fullData };
         
         // 타임스탬프 추가
-        payload._lastSaved = Date.now();
+        payload._lastSaved = currentTimestamp;
         
         if (payload.facilities) {
             payload.facilities = { 
@@ -265,6 +287,11 @@ async function saveData(data, isRetry = false) {
         }
         
         await setDoc(docRef, payload, { merge: true });
+        
+        // 저장 완료 후 약간의 지연 (onSnapshot이 트리거되기 전에 플래그 해제)
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        isSaving = false;
         showSync('saved');
         isRetrying = false;
         return Promise.resolve();
@@ -277,14 +304,18 @@ async function saveData(data, isRetry = false) {
                 const { signInAnonymously } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
                 await signInAnonymously(firebaseAuth);
                 // 재인증 후 다시 저장 시도 (재시도 플래그 설정)
-                return await saveData(fullData, true);
+                const result = await saveData(fullData, true);
+                isSaving = false;
+                return result;
             } catch (retryError) {
                 console.error("Retry failed:", retryError);
                 isRetrying = false;
+                isSaving = false;
                 showSync('error');
                 return Promise.reject(retryError);
             }
         } else {
+            isSaving = false;
             showSync('error');
             return Promise.reject(e);
         }
