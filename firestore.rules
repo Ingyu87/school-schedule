@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 학교 정보: 읽기/쓰기는 인증된 사용자만
+    match /schools/{schoolName} {
+      allow read, write: if request.auth != null;
+      
+      // 학교별 데이터: 해당 학교만 접근 가능
+      match /data/{document=**} {
+        allow read, write: if request.auth != null;
+      }
+    }
+    
+    // 기존 artifacts 경로 (마이그레이션 호환성)
+    match /artifacts/{appId}/public/data/schedules/{scheduleId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+
