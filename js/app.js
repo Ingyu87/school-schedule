@@ -24,20 +24,60 @@ function renderCurrentTab() {
 
 // 탭 및 버튼 활성화 제어
 function updateTabAccessibility() {
-    // 전담 교사 완료 확인
+    // 탭 완료 상태 확인
+    const tab0Completed = state.tabCompletion?.tab0 || false;
+    const tab1Completed = state.tabCompletion?.tab1 || false;
     const allTeachersCompleted = state.teachers.every(t => t.completed);
     
-    // 학급 시간표 탭 활성화/비활성화
+    // Tab 1 (시설 시간표) 활성화/비활성화
+    const tab1Btn = document.getElementById('btn-tab1');
+    if (tab1Btn) {
+        if (tab0Completed) {
+            tab1Btn.disabled = false;
+            tab1Btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            tab1Btn.title = '';
+        } else {
+            tab1Btn.disabled = true;
+            tab1Btn.classList.add('opacity-50', 'cursor-not-allowed');
+            tab1Btn.title = '0번 탭(기초 설정)을 완료해야 합니다';
+        }
+    }
+    
+    // Tab 2 (교과전담 교사별 시간표) 활성화/비활성화
+    const tab2Btn = document.getElementById('btn-tab2');
+    if (tab2Btn) {
+        if (tab0Completed && tab1Completed) {
+            tab2Btn.disabled = false;
+            tab2Btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            tab2Btn.title = '';
+        } else {
+            tab2Btn.disabled = true;
+            tab2Btn.classList.add('opacity-50', 'cursor-not-allowed');
+            if (!tab0Completed) {
+                tab2Btn.title = '0번 탭(기초 설정)을 완료해야 합니다';
+            } else if (!tab1Completed) {
+                tab2Btn.title = '1번 탭(시설 시간표)을 완료해야 합니다';
+            }
+        }
+    }
+    
+    // Tab 3 (학급 시간표) 활성화/비활성화
     const tab3Btn = document.getElementById('btn-tab3');
     if (tab3Btn) {
-        if (allTeachersCompleted) {
+        if (tab0Completed && tab1Completed && allTeachersCompleted) {
             tab3Btn.disabled = false;
             tab3Btn.classList.remove('opacity-50', 'cursor-not-allowed');
             tab3Btn.title = '';
         } else {
             tab3Btn.disabled = true;
             tab3Btn.classList.add('opacity-50', 'cursor-not-allowed');
-            tab3Btn.title = '모든 전담 교사 시간표를 완료해야 합니다';
+            if (!tab0Completed) {
+                tab3Btn.title = '0번 탭(기초 설정)을 완료해야 합니다';
+            } else if (!tab1Completed) {
+                tab3Btn.title = '1번 탭(시설 시간표)을 완료해야 합니다';
+            } else {
+                tab3Btn.title = '모든 전담 교사 시간표를 완료해야 합니다';
+            }
         }
     }
     
@@ -122,8 +162,16 @@ async function init() {
         loadFromLocalStorage();
         initTimetables();
         renderTab0();
-        showSync('local');
+        // 마지막 저장 시간이 있으면 표시
+        if (typeof window !== 'undefined' && window.lastSavedTime) {
+            showSync('local', window.lastSavedTime.getTime());
+        } else {
+            showSync('local');
+        }
     }
+    
+    // 탭 활성화 상태 초기화
+    updateTabAccessibility();
 }
 
 // 로그아웃 함수
@@ -216,6 +264,68 @@ window.toggleHelp = function(helpId) {
             iconDiv.classList.remove('fa-chevron-up');
             iconDiv.classList.add('fa-chevron-down');
         }
+    }
+};
+
+// Tab 0 완료 토글
+window.toggleTab0Completion = function() {
+    const checkbox = document.getElementById('tab0-completed-checkbox');
+    if (!checkbox) return;
+    
+    state.tabCompletion = state.tabCompletion || {};
+    state.tabCompletion.tab0 = checkbox.checked;
+    
+    // 저장
+    saveData({ tabCompletion: state.tabCompletion });
+    
+    // 탭 활성화 상태 업데이트
+    updateTabAccessibility();
+    
+    // 체크박스 스타일 업데이트
+    const label = document.getElementById('tab0-completion-label');
+    if (label) {
+        if (checkbox.checked) {
+            label.classList.remove('bg-green-50', 'border-green-300');
+            label.classList.add('bg-green-100', 'border-green-500');
+        } else {
+            label.classList.remove('bg-green-100', 'border-green-500');
+            label.classList.add('bg-green-50', 'border-green-300');
+        }
+    }
+    
+    if (checkbox.checked) {
+        showAlert('기초 설정이 완료되었습니다. 이제 "1. 시설 시간표" 탭을 사용할 수 있습니다.', 'success');
+    }
+};
+
+// Tab 1 완료 토글
+window.toggleTab1Completion = function() {
+    const checkbox = document.getElementById('tab1-completed-checkbox');
+    if (!checkbox) return;
+    
+    state.tabCompletion = state.tabCompletion || {};
+    state.tabCompletion.tab1 = checkbox.checked;
+    
+    // 저장
+    saveData({ tabCompletion: state.tabCompletion });
+    
+    // 탭 활성화 상태 업데이트
+    updateTabAccessibility();
+    
+    // 체크박스 스타일 업데이트
+    const label = document.getElementById('tab1-completion-label');
+    if (label) {
+        if (checkbox.checked) {
+            label.classList.remove('bg-green-50', 'border-green-300');
+            label.classList.add('bg-green-100', 'border-green-500');
+        } else {
+            label.classList.remove('bg-green-100', 'border-green-500');
+            label.classList.add('bg-green-50', 'border-green-300');
+        }
+    }
+    
+    if (checkbox.checked) {
+        showAlert('시설 시간표가 완료되었습니다. 이제 "2. 교과전담 교사별 시간표" 탭을 사용할 수 있습니다.', 'success');
     }
 };
 

@@ -10,6 +10,24 @@ function renderTab0() {
     renderTimeAllocationTable();
     renderCommonAllocations();
     renderTeacherConfig();
+    updateTab0CompletionUI();
+}
+
+// Tab 0 완료 상태 UI 업데이트
+function updateTab0CompletionUI() {
+    const checkbox = document.getElementById('tab0-completed-checkbox');
+    const label = document.getElementById('tab0-completion-label');
+    if (checkbox && label) {
+        const isCompleted = state.tabCompletion?.tab0 || false;
+        checkbox.checked = isCompleted;
+        if (isCompleted) {
+            label.classList.remove('bg-green-50', 'border-green-300');
+            label.classList.add('bg-green-100', 'border-green-500');
+        } else {
+            label.classList.remove('bg-green-100', 'border-green-500');
+            label.classList.add('bg-green-50', 'border-green-300');
+        }
+    }
 }
 
 function renderDailyCounts() {

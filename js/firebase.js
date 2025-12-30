@@ -239,7 +239,7 @@ async function saveData(data, isRetry = false) {
     
     if (!isFirebaseEnabled) {
         isSaving = false;
-        showSync('local');
+        showSync('local', currentTimestamp);
         return Promise.resolve();
     }
 
@@ -292,7 +292,7 @@ async function saveData(data, isRetry = false) {
         await new Promise(resolve => setTimeout(resolve, 100));
         
         isSaving = false;
-        showSync('saved');
+        showSync('saved', currentTimestamp);
         isRetrying = false;
         return Promise.resolve();
     } catch (e) {
@@ -338,6 +338,14 @@ function loadFromLocalStorage() {
     if (saved) {
         try {
             const data = JSON.parse(saved);
+            // 마지막 저장 시간 추출
+            const savedTimestamp = data._lastSaved;
+            if (savedTimestamp && typeof showSync === 'function') {
+                // 전역 변수에 저장 시간 설정
+                if (typeof window !== 'undefined' && window.lastSavedTime === undefined) {
+                    window.lastSavedTime = new Date(savedTimestamp);
+                }
+            }
             // _lastSaved 필드 제거 (state에 포함되지 않도록)
             delete data._lastSaved;
             

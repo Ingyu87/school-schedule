@@ -57,29 +57,67 @@ function showConfirm(message, onConfirm) {
     showModal(message, 'confirm', onConfirm);
 }
 
+// 마지막 저장 시간 추적
+let lastSavedTime = null;
+
+// 날짜/시간 포맷팅 함수
+function formatDateTime(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 // 동기화 표시
-function showSync(status) {
+function showSync(status, timestamp = null) {
     const el = document.getElementById('sync-indicator');
     if (!el) return;
+    
     if(status === 'saving') { 
         el.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-blue-500"></i> 저장중'; 
         el.className = "text-xs px-2 py-1 rounded bg-blue-50 text-blue-600 ml-2"; 
     }
     else if(status === 'saved') { 
-        el.innerHTML = '<i class="fa-solid fa-check text-green-500"></i> 저장됨'; 
+        // 저장 완료 시 타임스탬프 저장
+        const savedTime = timestamp ? new Date(timestamp) : new Date();
+        lastSavedTime = savedTime;
+        const timeStr = formatDateTime(savedTime);
+        
+        el.innerHTML = `<i class="fa-solid fa-check text-green-500"></i> 저장됨<br><span class="text-[10px]">${timeStr}</span>`; 
         el.className = "text-xs px-2 py-1 rounded bg-green-50 text-green-600 ml-2"; 
+        el.title = `마지막 저장: ${timeStr}`;
+        
+        // 3초 후 간단한 표시로 변경 (하지만 마지막 저장 시간은 유지)
         setTimeout(() => { 
-            el.innerHTML = '<i class="fa-solid fa-cloud"></i> 대기중'; 
-            el.className = "text-xs px-2 py-1 rounded bg-gray-100 text-gray-500 ml-2"; 
-        }, 2000); 
+            if (lastSavedTime) {
+                const timeStr = formatDateTime(lastSavedTime);
+                el.innerHTML = `<i class="fa-solid fa-check-circle text-green-500"></i> 저장됨<br><span class="text-[10px] opacity-75">${timeStr}</span>`; 
+                el.className = "text-xs px-2 py-1 rounded bg-green-50 text-green-600 ml-2"; 
+                el.title = `마지막 저장: ${timeStr}`;
+            } else {
+                el.innerHTML = '<i class="fa-solid fa-cloud"></i> 대기중'; 
+                el.className = "text-xs px-2 py-1 rounded bg-gray-100 text-gray-500 ml-2"; 
+            }
+        }, 3000); 
     }
     else if(status === 'error') { 
         el.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-500"></i> 오류'; 
         el.className = "text-xs px-2 py-1 rounded bg-red-50 text-red-600 ml-2"; 
+        if (lastSavedTime) {
+            const timeStr = formatDateTime(lastSavedTime);
+            el.title = `저장 실패 (마지막 저장: ${timeStr})`;
+        }
     }
     else if(status === 'local') { 
         el.innerHTML = '<i class="fa-solid fa-database"></i> 로컬'; 
         el.className = "text-xs px-2 py-1 rounded bg-yellow-50 text-yellow-600 ml-2"; 
+        if (lastSavedTime) {
+            const timeStr = formatDateTime(lastSavedTime);
+            el.title = `로컬 저장 모드 (마지막 저장: ${timeStr})`;
+        }
     }
 }
 

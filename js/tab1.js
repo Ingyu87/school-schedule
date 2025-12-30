@@ -16,6 +16,9 @@ function renderTab1() {
     // 기존 그리드 제거
     container.innerHTML = '';
     
+    // Tab 1 완료 상태 UI 업데이트
+    updateTab1CompletionUI();
+    
     // 각 시설별로 카드 생성
     state.facilityList.forEach((facId, idx) => {
         if (!state.facilities[facId] || state.facilities[facId].length < 7) {
@@ -158,6 +161,23 @@ function updateFacilityNameDisplay() {
             displayEl.textContent = state.facilityNames[facId] || `시설${state.facilityList.indexOf(facId) + 1}`;
         }
     });
+}
+
+// Tab 1 완료 상태 UI 업데이트
+function updateTab1CompletionUI() {
+    const checkbox = document.getElementById('tab1-completed-checkbox');
+    const label = document.getElementById('tab1-completion-label');
+    if (checkbox && label) {
+        const isCompleted = state.tabCompletion?.tab1 || false;
+        checkbox.checked = isCompleted;
+        if (isCompleted) {
+            label.classList.remove('bg-green-50', 'border-green-300');
+            label.classList.add('bg-green-100', 'border-green-500');
+        } else {
+            label.classList.remove('bg-green-100', 'border-green-500');
+            label.classList.add('bg-green-50', 'border-green-300');
+        }
+    }
 }
 
 window.resetFacility = function(type) {
