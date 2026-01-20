@@ -333,13 +333,21 @@ function renderCurriculum() {
         const row = document.createElement('tr');
         const subjects = state.curriculum[gr];
         let total = 0;
+        const dailyCounts = state.dailyCounts[gr] || [];
+        const dailyTotal = dailyCounts.reduce((sum, c) => sum + (parseInt(c) || 0), 0);
         let html = `<td>${gr}</td>`;
         CURRICULUM_COLS.forEach(subj => {
             const val = subjects[subj] || 0;
             total += val;
             html += `<td><input type="number" min="0" value="${val}" class="edit-input" onchange="updateCurriculum('${gr}', '${subj}', this.value)"></td>`;
         });
-        html += `<td class="font-bold bg-gray-100 text-indigo-600">${total}</td>`;
+        let totalClass = 'font-bold bg-gray-100';
+        if (dailyTotal > 0) {
+            totalClass += total === dailyTotal ? ' text-green-600' : ' text-red-600';
+        } else {
+            totalClass += ' text-indigo-600';
+        }
+        html += `<td class="${totalClass}">${total}</td>`;
         row.innerHTML = html;
         tbody.appendChild(row);
     });
@@ -491,6 +499,7 @@ window.updateClassConfig = function(gr, val) {
 window.updateCurriculum = function(gr, s, v) { 
     state.curriculum[gr][s] = parseInt(v) || 0; 
     saveData({curriculum: state.curriculum}); 
+    renderCurriculum();
 };
 
 window.addAlloc = function(gradeNum) {

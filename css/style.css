@@ -2,6 +2,13 @@
 body { 
     font-family: 'Noto Sans KR', sans-serif; 
     background-color: #f3f4f6; 
+    min-height: 100dvh;
+}
+
+/* 모바일 안전 영역 보정 */
+main {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 .card { 
