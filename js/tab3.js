@@ -86,6 +86,11 @@ window.loadEditor = function(k) {
     updateClassCompletionCheckbox();
 };
 
+function isCurrentClassCompleted() {
+    if (!editorState.classKey) return false;
+    return !!state.timetableCompletion[editorState.classKey];
+}
+
 function renderEditorGrid() {
     const k = editorState.classKey;
     if (!k) return;
@@ -165,6 +170,7 @@ function renderEditorGrid() {
             let cls = 'tt-cell '; 
             let txt = '';
             let isFixed = false;
+            const isCompleted = state.timetableCompletion[k] || false;
             
             if (fac) {
                 txt = fac;
@@ -182,11 +188,16 @@ function renderEditorGrid() {
                 cls += 'bg-white';
             }
             
-            // Delete 키 지원을 위한 tabindex 추가
-            const tabindex = isFixed ? '' : 'tabindex="0"';
-            const keydownHandler = isFixed ? '' : `onkeydown="handleClassCellKeydown(event, ${i}, ${j})"`;
+            const isLocked = isCompleted && !isFixed;
+            if (isLocked) {
+                cls += 'cell-locked';
+            }
             
-            if (isFixed) {
+            // Delete 키 지원을 위한 tabindex 추가
+            const tabindex = (!isFixed && !isLocked) ? 'tabindex="0"' : '';
+            const keydownHandler = (!isFixed && !isLocked) ? `onkeydown="handleClassCellKeydown(event, ${i}, ${j})"` : '';
+            
+            if (isFixed || isLocked) {
                 h += `<td class="${cls}">${txt}</td>`;
             } else {
                 h += `<td class="${cls}" onclick="clickCell(${i},${j})" ${tabindex} ${keydownHandler}>${txt}</td>`;
@@ -345,6 +356,10 @@ function countUse(k, s) {
 }
 
 window.selSubj = function(s) { 
+    if (isCurrentClassCompleted()) {
+        showAlert('완료 상태에서는 수정할 수 없습니다.<br>완료를 해제한 뒤 수정하세요.');
+        return;
+    }
     // 같은 과목을 다시 클릭하면 선택 해제
     if (editorState.selectedSubj === s) {
         editorState.selectedSubj = null;
@@ -481,6 +496,10 @@ function isTeacherAssigned(classRow, col, classKey) {
 
 // 학급 시간표 셀 키보드 핸들러
 window.handleClassCellKeydown = function(e, r, c) {
+    if (isCurrentClassCompleted()) {
+        showAlert('완료 상태에서는 수정할 수 없습니다.<br>완료를 해제한 뒤 수정하세요.');
+        return;
+    }
     if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault();
         const k = editorState.classKey;
@@ -512,6 +531,10 @@ window.handleClassCellKeydown = function(e, r, c) {
 };
 
 window.clickCell = function(r, c) {
+    if (isCurrentClassCompleted()) {
+        showAlert('완료 상태에서는 수정할 수 없습니다.<br>완료를 해제한 뒤 수정하세요.');
+        return;
+    }
     const k = editorState.classKey;
     const gr = k.split('-')[0];
     const gradeNum = parseInt(gr);
@@ -566,6 +589,10 @@ window.clickCell = function(r, c) {
 };
 
 window.autoFill = function() {
+    if (isCurrentClassCompleted()) {
+        showAlert('완료 상태에서는 수정할 수 없습니다.<br>완료를 해제한 뒤 수정하세요.');
+        return;
+    }
     showConfirm('전담 과목을 자동 배치하시겠습니까?', doAutoFill);
 };
 
@@ -605,6 +632,10 @@ function doAutoFill() {
 }
 
 window.resetClassTimetable = function() {
+    if (isCurrentClassCompleted()) {
+        showAlert('완료 상태에서는 수정할 수 없습니다.<br>완료를 해제한 뒤 수정하세요.');
+        return;
+    }
     const k = editorState.classKey;
     if (!k) return;
     showConfirm(`${k} 시간표를 초기화하시겠습니까?`, () => {
@@ -747,9 +778,14 @@ window.toggleClassCompletion = function() {
     
     const checkbox = document.getElementById('current-class-completed');
     state.timetableCompletion[editorState.classKey] = checkbox.checked;
+    if (checkbox.checked) {
+        editorState.selectedSubj = null;
+    }
     
     saveData({ timetableCompletion: state.timetableCompletion });
     renderClassCompletionPanel();
     updateTabAccessibility();
+    renderEditorGrid();
+    updatePaletteCounts();
 };
 
