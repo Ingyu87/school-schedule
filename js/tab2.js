@@ -197,6 +197,12 @@ function renderTeacherSetup() {
                         <button onclick="resetTeacherAssignments(${idx})" ${btnDisabled} class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs hover:bg-gray-200 ${btnClass}" title="배정 초기화">
                             <i class="fa-solid fa-rotate-left"></i>
                         </button>
+                        <button onclick="resetTeacherSchedule(${idx})" ${btnDisabled} class="bg-orange-50 text-orange-600 px-2 py-1 rounded text-xs hover:bg-orange-100 ${btnClass}" title="시간표 초기화">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </button>
+                        <button onclick="resetTeacherAll(${idx})" ${btnDisabled} class="bg-red-50 text-red-600 px-2 py-1 rounded text-xs hover:bg-red-100 ${btnClass}" title="교사 전체 초기화">
+                            <i class="fa-solid fa-eraser"></i>
+                        </button>
                         <button onclick="toggleTeacherTimetable(${idx})" class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
                             <i class="fa-solid fa-calendar mr-1"></i>시간표
                         </button>
@@ -500,6 +506,25 @@ window.resetTeacherAssignments = function(idx) {
         if (badgesContainer) {
             badgesContainer.innerHTML = '<span class="text-gray-400 text-sm">배정된 과목 없음</span>';
         }
+    });
+};
+
+window.resetTeacherAll = function(idx) {
+    if (isTeacherCompleted(idx)) {
+        showAlert('완료 상태에서는 수정할 수 없습니다.<br>완료를 해제한 뒤 수정하세요.');
+        return;
+    }
+    const t = state.teachers[idx];
+    if (!t) return;
+    
+    showConfirm(`${t.name} 선생님 정보를 전체 초기화하시겠습니까?`, () => {
+        t.assignments = [];
+        t.schedule = grid(6, 5);
+        t.completed = false;
+        saveData({ teachers: state.teachers });
+        renderTab2();
+        renderTeacherTimetables();
+        updateTabAccessibility();
     });
 };
 
