@@ -304,6 +304,10 @@ window.toggleTab0Completion = function() {
         }
     }
     
+    if (typeof updateTab0CompletionUI === 'function') {
+        updateTab0CompletionUI();
+    }
+    
     if (checkbox.checked) {
         showAlert('기초 설정이 완료되었습니다. 이제 "1. 시설 시간표" 탭을 사용할 수 있습니다.', 'success');
     }

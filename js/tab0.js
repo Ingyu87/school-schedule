@@ -13,6 +13,24 @@ function renderTab0() {
     updateTab0CompletionUI();
 }
 
+function setTab0InputsDisabled(disabled) {
+    const tab0 = document.getElementById('tab0');
+    if (!tab0) return;
+    const controls = tab0.querySelectorAll('input, select, textarea, button');
+    controls.forEach(el => {
+        if (el.id === 'tab0-completed-checkbox') {
+            el.disabled = false;
+            return;
+        }
+        el.disabled = disabled;
+        if (disabled) {
+            el.classList.add('opacity-60', 'cursor-not-allowed');
+        } else {
+            el.classList.remove('opacity-60', 'cursor-not-allowed');
+        }
+    });
+}
+
 // Tab 0 완료 상태 UI 업데이트
 function updateTab0CompletionUI() {
     const checkbox = document.getElementById('tab0-completed-checkbox');
@@ -27,6 +45,7 @@ function updateTab0CompletionUI() {
             label.classList.remove('bg-green-100', 'border-green-500');
             label.classList.add('bg-green-50', 'border-green-300');
         }
+        setTab0InputsDisabled(isCompleted);
     }
 }
 
