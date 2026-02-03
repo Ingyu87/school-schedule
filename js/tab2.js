@@ -418,8 +418,10 @@ window.toggleTeacherAssignment = function(idx, key, hours, isSpecial) {
     
     saveData({ teachers: state.teachers });
     
-    // 버튼 목록 다시 채우기 (배정된 항목 표시)
-    populateTeacherAssignmentOptions(idx);
+    // 모든 교사의 버튼 목록 다시 채우기 (중복 방지 반영)
+    state.teachers.forEach((t, tIdx) => {
+        populateTeacherAssignmentOptions(tIdx);
+    });
     
     // renderTab2() 대신 필요한 부분만 업데이트
     // 1. 시수 재계산 및 업데이트
@@ -480,8 +482,10 @@ window.resetTeacherAssignments = function(idx) {
         t.assignments = [];
         saveData({ teachers: state.teachers });
         
-        // 버튼 목록 다시 채우기
-        populateTeacherAssignmentOptions(idx);
+        // 모든 교사의 버튼 목록 다시 채우기
+        state.teachers.forEach((teacher, tIdx) => {
+            populateTeacherAssignmentOptions(tIdx);
+        });
         
         // 시수 표시 업데이트
         const statusEl = document.querySelector(`#teacher-setup-list > div:nth-child(${idx + 1}) .text-sm.font-bold.px-2`);
