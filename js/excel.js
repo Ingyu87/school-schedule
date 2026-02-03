@@ -6,7 +6,7 @@ window.generateFinalExcel = function() {
         const wb = XLSX.utils.book_new();
         
         // 시트 데이터 생성
-        const sheetData = generateSchoolTimetableData();
+        const { data: sheetData, styles: sheetStyles } = generateSchoolTimetableData();
         
         // 워크시트 생성
         const ws = XLSX.utils.aoa_to_sheet(sheetData);
@@ -15,7 +15,6 @@ window.generateFinalExcel = function() {
         const colWidths = [
             { wch: 8 },  // 학년
             { wch: 6 },  // 반
-            { wch: 8 },  // 교시
         ];
         // 월~금 각 교시 (1~6)
         for (let i = 0; i < 30; i++) {
@@ -27,11 +26,11 @@ window.generateFinalExcel = function() {
         const merges = [];
         
         // 헤더 병합 (월~금)
-        merges.push({ s: { r: 0, c: 3 }, e: { r: 0, c: 8 } });   // 월
-        merges.push({ s: { r: 0, c: 9 }, e: { r: 0, c: 14 } });  // 화
-        merges.push({ s: { r: 0, c: 15 }, e: { r: 0, c: 20 } }); // 수
-        merges.push({ s: { r: 0, c: 21 }, e: { r: 0, c: 26 } }); // 목
-        merges.push({ s: { r: 0, c: 27 }, e: { r: 0, c: 32 } }); // 금
+        merges.push({ s: { r: 0, c: 2 }, e: { r: 0, c: 7 } });   // 월
+        merges.push({ s: { r: 0, c: 8 }, e: { r: 0, c: 13 } });  // 화
+        merges.push({ s: { r: 0, c: 14 }, e: { r: 0, c: 19 } }); // 수
+        merges.push({ s: { r: 0, c: 20 }, e: { r: 0, c: 25 } }); // 목
+        merges.push({ s: { r: 0, c: 26 }, e: { r: 0, c: 31 } }); // 금
         
         // 학년/반 병합
         let currentRow = 2;
@@ -45,6 +44,24 @@ window.generateFinalExcel = function() {
         });
         
         ws['!merges'] = merges;
+        
+        // 셀 스타일 적용 (교과: 노란색, 시설: 초록색)
+        if (sheetStyles && Array.isArray(sheetStyles)) {
+            const facilityFill = { patternType: 'solid', fgColor: { rgb: 'FFC6EFCE' } };
+            const subjectFill = { patternType: 'solid', fgColor: { rgb: 'FFFFF2CC' } };
+            
+            sheetStyles.forEach((row, r) => {
+                if (!row) return;
+                row.forEach((type, c) => {
+                    if (!type) return;
+                    const cellAddr = XLSX.utils.encode_cell({ r, c });
+                    const cell = ws[cellAddr];
+                    if (!cell) return;
+                    if (type === 'facility') cell.s = { fill: facilityFill };
+                    if (type === 'subject') cell.s = { fill: subjectFill };
+                });
+            });
+        }
         
         // 시트 추가
         XLSX.utils.book_append_sheet(wb, ws, '전교 기준 시간표');
@@ -62,14 +79,17 @@ window.generateFinalExcel = function() {
 
 function generateSchoolTimetableData() {
     const data = [];
+    const styles = [];
     
     // 헤더 1행: 요일
-    const headerRow1 = ['학년', '반', '교시', '월', '', '', '', '', '', '화', '', '', '', '', '', '수', '', '', '', '', '', '목', '', '', '', '', '', '금', '', '', '', '', ''];
+    const headerRow1 = ['학년', '반', '월', '', '', '', '', '', '화', '', '', '', '', '', '수', '', '', '', '', '', '목', '', '', '', '', '', '금', '', '', '', '', ''];
     data.push(headerRow1);
+    styles.push([]);
     
     // 헤더 2행: 교시
-    const headerRow2 = ['', '', '', '1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6'];
+    const headerRow2 = ['', '', '1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6'];
     data.push(headerRow2);
+    styles.push([]);
     
     // 각 학년/반별 데이터
     ['1학년', '2학년', '3학년', '4학년', '5학년', '6학년'].forEach(gr => {
@@ -87,35 +107,35 @@ function generateSchoolTimetableData() {
             const gradeLabel = gr.replace('학년', '');
             const classLabel = c;
             
-            // 6개 교시 각각의 행 생성
-            for (let period = 0; period < 6; period++) {
-                const row = [
-                    period === 0 ? gradeLabel : '', // 학년 (첫 교시에만)
-                    period === 0 ? classLabel : '',  // 반 (첫 교시에만)
-                    period + 1 // 교시
-                ];
-                
-                // 월~금 (5일)
-                for (let day = 0; day < 5; day++) {
+            const row = [gradeLabel, classLabel];
+            const styleRow = ['', ''];
+            
+            // 월~금 * 교시 1~6
+            for (let day = 0; day < 5; day++) {
+                for (let period = 0; period < 6; period++) {
                     const cellValue = isCompleted ? (timetable[period][day] || '') : '';
-                    
-                    // 셀 값 포맷팅
-                    let formattedValue = cellValue;
-                    
                     const facilityNames = getFacilityNamesForClass(gradeNum, c, period, day);
+                    let formattedValue = cellValue;
+                    let type = '';
+                    
                     if (facilityNames.length) {
                         formattedValue = facilityNames.join('+');
+                        type = 'facility';
+                    } else if (cellValue) {
+                        type = 'subject';
                     }
                     
                     row.push(formattedValue);
+                    styleRow.push(type);
                 }
-                
-                data.push(row);
             }
+            
+            data.push(row);
+            styles.push(styleRow);
         }
     });
     
-    return data;
+    return { data, styles };
 }
 
 // 전담 과목인지 확인

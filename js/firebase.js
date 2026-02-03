@@ -168,6 +168,8 @@ function setupFirebaseListener(doc, onSnapshot, setDoc) {
                 if(data.scheduleTimes) state.scheduleTimes = data.scheduleTimes;
                 if(data.facilityNames) state.facilityNames = data.facilityNames;
                 if(data.facilityList) state.facilityList = data.facilityList;
+                if(data.facilityCompletion) state.facilityCompletion = data.facilityCompletion;
+                if(data.tabCompletion) state.tabCompletion = data.tabCompletion;
                 if(data.timetableCompletion) state.timetableCompletion = data.timetableCompletion;
                 
                 // 로컬 스토리지에도 저장 (동기화) - 하지만 타임스탬프는 Firebase 것 사용
