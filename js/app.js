@@ -100,11 +100,12 @@ function updateTabAccessibility() {
         }
     });
     const allClassesCompleted = allClassKeys.every(k => state.timetableCompletion[k]);
+    const anyClassCompleted = allClassKeys.some(k => state.timetableCompletion[k]);
     
     // 최종 엑셀 생성 버튼 활성화/비활성화
     const finalBtn = document.getElementById('final-excel-btn');
     if (finalBtn) {
-        if (allTeachersCompleted && allClassesCompleted) {
+        if (anyClassCompleted) {
             finalBtn.disabled = false;
             finalBtn.classList.remove('disabled:bg-gray-300', 'disabled:cursor-not-allowed');
             finalBtn.classList.add('hover:bg-purple-700');

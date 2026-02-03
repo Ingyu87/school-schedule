@@ -64,6 +64,11 @@ main {
     font-size: 0.9rem; 
     cursor: cell; 
 }
+.grid-input.locked {
+    background: #f3f4f6;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
 .grid-input:focus { 
     background-color: #e0e7ff; 
     font-weight: bold; 

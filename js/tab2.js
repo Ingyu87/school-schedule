@@ -6,6 +6,10 @@ function renderTab2() {
     renderTeacherCompletionPanel();
 }
 
+function isTeacherCompleted(idx) {
+    return !!state.teachers?.[idx]?.completed;
+}
+
 function renderTeacherCompletionPanel() {
     const panel = document.getElementById('teacher-completion-panel');
     const summary = document.getElementById('teacher-completion-summary');
@@ -145,17 +149,19 @@ function renderTeacherSetup() {
         if (!t.assignments) t.assignments = [];
         
         let totalHours = t.assignments.reduce((sum, a) => sum + (a.hours || 0), 0);
+        const isCompleted = isTeacherCompleted(idx);
         
         // 0번 탭에서 설정한 목표 시수 가져오기
         const targetHours = getTeacherTargetHours(idx);
         
-                const badges = t.assignments.map((a, aIdx) => {
+        const badges = t.assignments.map((a, aIdx) => {
             const bgClass = a.isSpecial ? 'bg-yellow-100 text-yellow-700' : 'bg-indigo-100 text-indigo-700';
             const displaySubj = a.subject.replace('[특수]', '');
+            const removeIcon = isCompleted ? '' : `<i class="fa-solid fa-xmark ml-1 cursor-pointer hover:text-red-500" onclick="removeTeacherAssignment(${idx}, ${aIdx})"></i>`;
             return `
                 <span class="inline-flex items-center ${bgClass} px-2 py-1 rounded text-xs mr-1 mb-1">
                     ${a.isSpecial ? '⭐' : ''}${a.grade}-${a.classNum} ${displaySubj}(${a.hours}h)
-                    <i class="fa-solid fa-xmark ml-1 cursor-pointer hover:text-red-500" onclick="removeTeacherAssignment(${idx}, ${aIdx})"></i>
+                    ${removeIcon}
                 </span>`;
         }).join('');
         
@@ -166,13 +172,17 @@ function renderTeacherSetup() {
         const completedCheck = t.completed ? 'checked' : '';
         const completedBadge = t.completed ? 
             '<span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded ml-2"><i class="fa-solid fa-check mr-1"></i>완료</span>' : '';
+        const nameDisabled = isCompleted ? 'disabled' : '';
+        const nameClass = isCompleted ? 'opacity-60 cursor-not-allowed' : '';
+        const btnDisabled = isCompleted ? 'disabled' : '';
+        const btnClass = isCompleted ? 'disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed' : '';
         
         container.innerHTML += `
             <div class="bg-white rounded-lg border p-4">
                 <div class="flex justify-between items-center mb-3">
                     <div class="flex items-center gap-2">
-                        <input class="font-bold text-lg border-b-2 border-gray-200 w-28 outline-none focus:border-indigo-500" 
-                               value="${t.name}" onchange="updTName(${idx},this.value)">
+                        <input class="font-bold text-lg border-b-2 border-gray-200 w-28 outline-none focus:border-indigo-500 ${nameClass}" 
+                               value="${t.name}" onchange="updTName(${idx},this.value)" ${nameDisabled}>
                         ${completedBadge}
                     </div>
                     <div class="flex items-center gap-2">
@@ -184,13 +194,13 @@ function renderTeacherSetup() {
                             <input type="checkbox" ${completedCheck} onchange="toggleTeacherCompletion(${idx})" class="mr-2">
                             <span class="text-green-700 font-bold">완료</span>
                         </label>
-                        <button onclick="resetTeacherAssignments(${idx})" class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs hover:bg-gray-200" title="배정 초기화">
+                        <button onclick="resetTeacherAssignments(${idx})" ${btnDisabled} class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs hover:bg-gray-200 ${btnClass}" title="배정 초기화">
                             <i class="fa-solid fa-rotate-left"></i>
                         </button>
                         <button onclick="toggleTeacherTimetable(${idx})" class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
                             <i class="fa-solid fa-calendar mr-1"></i>시간표
                         </button>
-                        <button onclick="removeTeacher(${idx})" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="removeTeacher(${idx})" ${btnDisabled} class="text-gray-400 hover:text-red-500 ${btnClass}"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 </div>
                 <div class="flex flex-wrap mb-3 min-h-[32px]">${badges || '<span class="text-gray-400 text-sm">배정된 과목 없음</span>'}</div>
@@ -216,6 +226,7 @@ function populateTeacherAssignmentOptions(idx) {
     
     // 이미 배정된 항목들 (중복 방지용)
     const assigned = new Set();
+    const isCompleted = isTeacherCompleted(idx);
     state.teachers.forEach(t => {
         (t.assignments || []).forEach(a => {
             assigned.add(`${a.grade}-${a.classNum}-${a.subject}`);
@@ -240,8 +251,8 @@ function populateTeacherAssignmentOptions(idx) {
             for (let c = 1; c <= classCount; c++) {
                 const key = `${gradeNum}-${c}-${subjName}`;
                 const isAssigned = assigned.has(key);
-                const disabled = isAssigned ? 'disabled' : '';
-                const opacityClass = isAssigned ? 'opacity-40' : '';
+                const disabled = (isAssigned || isCompleted) ? 'disabled' : '';
+                const opacityClass = (isAssigned || isCompleted) ? 'opacity-40' : '';
                 const label = isAssigned ? 
                     `${gradeNum}-${c} ${subjName} (${hours}h) ✓` :
                     `${gradeNum}-${c} ${subjName} (${hours}h)`;
@@ -249,7 +260,7 @@ function populateTeacherAssignmentOptions(idx) {
                 container.innerHTML += `
                     <button onclick="toggleTeacherAssignment(${idx}, '${key}', ${hours}, false)" ${disabled}
                             data-key="${key}"
-                            class="text-left p-2 text-xs border rounded hover:bg-indigo-50 transition-colors ${opacityClass} ${isAssigned ? 'bg-gray-200 cursor-not-allowed' : 'bg-white'}">
+                            class="text-left p-2 text-xs border rounded hover:bg-indigo-50 transition-colors ${opacityClass} ${(isAssigned || isCompleted) ? 'bg-gray-200 cursor-not-allowed' : 'bg-white'}">
                         ${label}
                     </button>`;
             }
@@ -260,8 +271,8 @@ function populateTeacherAssignmentOptions(idx) {
             if (sp.grade == gradeNum) {
                 const key = `${gradeNum}-${sp.classNum}-[특수]${sp.subject}`;
                 const isAssigned = assigned.has(key);
-                const disabled = isAssigned ? 'disabled' : '';
-                const opacityClass = isAssigned ? 'opacity-40' : '';
+                const disabled = (isAssigned || isCompleted) ? 'disabled' : '';
+                const opacityClass = (isAssigned || isCompleted) ? 'opacity-40' : '';
                 const label = isAssigned ?
                     `⭐${gradeNum}-${sp.classNum} ${sp.subject} (${sp.hours}h) ✓` :
                     `⭐${gradeNum}-${sp.classNum} ${sp.subject} (${sp.hours}h)`;
@@ -269,7 +280,7 @@ function populateTeacherAssignmentOptions(idx) {
                 container.innerHTML += `
                     <button onclick="toggleTeacherAssignment(${idx}, '${key}', ${sp.hours}, true)" ${disabled}
                             data-key="${key}"
-                            class="text-left p-2 text-xs border rounded hover:bg-yellow-50 transition-colors ${opacityClass} ${isAssigned ? 'bg-gray-200 cursor-not-allowed' : 'bg-white'}">
+                            class="text-left p-2 text-xs border rounded hover:bg-yellow-50 transition-colors ${opacityClass} ${(isAssigned || isCompleted) ? 'bg-gray-200 cursor-not-allowed' : 'bg-white'}">
                         ${label}
                     </button>`;
             }
@@ -372,6 +383,10 @@ window.updateTeacherClassOptions = function(idx) {
 // window.onTeacherClassChange 함수 제거됨
 
 window.toggleTeacherAssignment = function(idx, key, hours, isSpecial) {
+    if (isTeacherCompleted(idx)) {
+        showAlert('완료 상태에서는 수정할 수 없습니다.<br>완료를 해제한 뒤 수정하세요.');
+        return;
+    }
     // 값 파싱: "3-1-영어" 또는 "4-2-[특수]과학"
     const parts = key.split('-');
     if (parts.length < 3) return;
@@ -428,10 +443,11 @@ window.toggleTeacherAssignment = function(idx, key, hours, isSpecial) {
         t.assignments.forEach((a, aIdx) => {
             const bgClass = a.isSpecial ? 'bg-yellow-100 text-yellow-700' : 'bg-indigo-100 text-indigo-700';
             const displaySubj = a.subject.replace('[특수]', '');
+            const removeIcon = isTeacherCompleted(idx) ? '' : `<i class="fa-solid fa-xmark ml-1 cursor-pointer hover:text-red-500" onclick="removeTeacherAssignment(${idx}, ${aIdx})"></i>`;
             const badgeHtml = `
                 <span class="inline-flex items-center ${bgClass} px-2 py-1 rounded text-xs mr-1 mb-1">
                     ${a.isSpecial ? '⭐' : ''}${a.grade}-${a.classNum} ${displaySubj}(${a.hours}h)
-                    <i class="fa-solid fa-xmark ml-1 cursor-pointer hover:text-red-500" onclick="removeTeacherAssignment(${idx}, ${aIdx})"></i>
+                    ${removeIcon}
                 </span>`;
             badgesContainer.insertAdjacentHTML('beforeend', badgeHtml);
         });
@@ -443,12 +459,20 @@ window.toggleTeacherAssignment = function(idx, key, hours, isSpecial) {
 };
 
 window.removeTeacherAssignment = function(teacherIdx, assignIdx) {
+    if (isTeacherCompleted(teacherIdx)) {
+        showAlert('완료 상태에서는 수정할 수 없습니다.<br>완료를 해제한 뒤 수정하세요.');
+        return;
+    }
     state.teachers[teacherIdx].assignments.splice(assignIdx, 1);
     saveData({ teachers: state.teachers });
     renderTab2();
 };
 
 window.resetTeacherAssignments = function(idx) {
+    if (isTeacherCompleted(idx)) {
+        showAlert('완료 상태에서는 수정할 수 없습니다.<br>완료를 해제한 뒤 수정하세요.');
+        return;
+    }
     const t = state.teachers[idx];
     if (!t) return;
     
@@ -556,13 +580,16 @@ function renderTeacherTimetables() {
                 const ch = subjects[subj];
                 const isDone = ch.current >= ch.target;
                 const isOver = ch.current > ch.target;
-                const bgClass = isOver ? 'bg-red-100 text-red-700 border-red-300' : 
+            const bgClass = isOver ? 'bg-red-100 text-red-700 border-red-300' : 
                                isDone ? 'bg-green-100 text-green-700 border-green-300' : 
                                'bg-gray-50 text-gray-700 border-gray-200';
                 const icon = ch.isSpecial ? '⭐' : '';
+            const paletteLocked = isTeacherCompleted(idx);
+            const paletteClass = paletteLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-80';
+            const paletteOnClick = paletteLocked ? '' : `onclick="selectTeacherClass(${idx}, '${classKey}', '${subj}')"`;
                 paletteHtml += `
-                    <div class="inline-flex items-center px-2 py-1 rounded border text-xs ${bgClass} cursor-pointer hover:opacity-80 mb-1" 
-                         onclick="selectTeacherClass(${idx}, '${classKey}', '${subj}')" 
+                    <div class="inline-flex items-center px-2 py-1 rounded border text-xs ${bgClass} ${paletteClass} mb-1" 
+                         ${paletteOnClick}
                          title="${subj}">
                         ${icon}<span class="font-bold">${classKey}</span> <span class="text-gray-600 ml-1">${subj}</span> <span class="ml-1 font-bold">${ch.current}/${ch.target}</span>
                     </div>`;
@@ -571,6 +598,7 @@ function renderTeacherTimetables() {
         
         const gridId = `teacher-${idx}`;
         let gridHtml = '';
+        const isCompleted = isTeacherCompleted(idx);
         for(let r = 0; r < 6; r++) {
             gridHtml += `<tr><td class="bg-gray-50 font-bold text-xs">${classPeriodLabels[r]}</td>`;
             for(let c = 0; c < 5; c++) {
@@ -590,7 +618,10 @@ function renderTeacherTimetables() {
                     });
                     if (hasOverflow) cellClass = 'bg-red-50';
                 }
-                gridHtml += `<td class="${cellClass} h-9 cursor-pointer hover:bg-indigo-50" onclick="clickTeacherCell(${idx}, ${r}, ${c})">
+                const cellLocked = isCompleted ? 'cell-locked' : '';
+                const cellHover = isCompleted ? '' : 'cursor-pointer hover:bg-indigo-50';
+                const cellOnClick = isCompleted ? '' : `onclick="clickTeacherCell(${idx}, ${r}, ${c})"`;
+                gridHtml += `<td class="${cellClass} ${cellHover} ${cellLocked} h-9" ${cellOnClick}>
                     <div class="w-full h-9 text-center text-sm font-medium flex items-center justify-center">${val || ''}</div>
                 </td>`;
             }
@@ -607,7 +638,7 @@ function renderTeacherTimetables() {
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="text-sm px-2 py-1 rounded font-bold ${scheduleHrs>=targetHrs && targetHrs > 0 ?'bg-green-100 text-green-700':'bg-orange-100 text-orange-700'}">${scheduleHrs}/${targetHrs}시간</span>
-                            <button onclick="resetTeacherSchedule(${idx})" class="text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded">
+                            <button onclick="resetTeacherSchedule(${idx})" ${isTeacherCompleted(idx) ? 'disabled' : ''} class="text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded disabled:text-gray-400 disabled:cursor-not-allowed">
                                 <i class="fa-solid fa-rotate-left"></i>
                             </button>
                         </div>
@@ -635,6 +666,10 @@ function renderTeacherTimetables() {
 let selectedTeacherClass = { teacherIdx: null, classKey: null, subject: null };
 
 window.selectTeacherClass = function(teacherIdx, classKey, subject) {
+    if (isTeacherCompleted(teacherIdx)) {
+        showAlert('완료 상태에서는 수정할 수 없습니다.<br>완료를 해제한 뒤 수정하세요.');
+        return;
+    }
     selectedTeacherClass = { teacherIdx, classKey, subject };
     
     // 선택 상태 저장 (렌더링 후에도 유지)
@@ -661,6 +696,10 @@ window.selectTeacherClass = function(teacherIdx, classKey, subject) {
 
 // 전담 시간표 셀 직접 입력 처리
 window.onTeacherCellInput = function(teacherIdx, r, c, value) {
+    if (isTeacherCompleted(teacherIdx)) {
+        showAlert('완료 상태에서는 수정할 수 없습니다.<br>완료를 해제한 뒤 수정하세요.');
+        return;
+    }
     const t = state.teachers[teacherIdx];
     if (!t.schedule) t.schedule = grid(6,5);
     
@@ -704,6 +743,10 @@ window.onTeacherCellInput = function(teacherIdx, r, c, value) {
 
 // 전담 교사 시간표 셀 키보드 핸들러
 window.handleTeacherCellKeydown = function(e, teacherIdx, r, c) {
+    if (isTeacherCompleted(teacherIdx)) {
+        showAlert('완료 상태에서는 수정할 수 없습니다.<br>완료를 해제한 뒤 수정하세요.');
+        return;
+    }
     if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault();
         const t = state.teachers[teacherIdx];
@@ -720,6 +763,10 @@ window.handleTeacherCellKeydown = function(e, teacherIdx, r, c) {
 };
 
 window.clickTeacherCell = function(teacherIdx, r, c, event) {
+    if (isTeacherCompleted(teacherIdx)) {
+        showAlert('완료 상태에서는 수정할 수 없습니다.<br>완료를 해제한 뒤 수정하세요.');
+        return;
+    }
     const t = state.teachers[teacherIdx];
     if (!t.schedule) t.schedule = grid(6,5);
     
@@ -820,6 +867,10 @@ window.clickTeacherCell = function(teacherIdx, r, c, event) {
 
 
 window.updTName = function(i, n) { 
+    if (isTeacherCompleted(i)) {
+        showAlert('완료 상태에서는 수정할 수 없습니다.<br>완료를 해제한 뒤 수정하세요.');
+        return;
+    }
     state.teachers[i].name = n; 
     saveData({teachers: state.teachers}); 
     renderTab2(); 
@@ -911,6 +962,10 @@ window.addTeacher = function() {
 };
 
 window.removeTeacher = function(idx) { 
+    if (isTeacherCompleted(idx)) {
+        showAlert('완료 상태에서는 수정할 수 없습니다.<br>완료를 해제한 뒤 수정하세요.');
+        return;
+    }
     showConfirm(`${state.teachers[idx].name} 교사를 삭제하시겠습니까?`, () => {
         state.teachers.splice(idx, 1); 
         saveData({teachers: state.teachers}); 
@@ -919,6 +974,10 @@ window.removeTeacher = function(idx) {
 };
 
 window.resetTeacherSchedule = function(idx) {
+    if (isTeacherCompleted(idx)) {
+        showAlert('완료 상태에서는 수정할 수 없습니다.<br>완료를 해제한 뒤 수정하세요.');
+        return;
+    }
     showConfirm(`${state.teachers[idx].name} 선생님 시간표를 초기화하시겠습니까?`, () => {
         state.teachers[idx].schedule = grid(6, 5);
         saveData({ teachers: state.teachers });
@@ -996,6 +1055,7 @@ window.toggleTeacherTimetable = function(idx) {
     
     // 팔레트 HTML
     let paletteHtml = '';
+    const isCompleted = isTeacherCompleted(idx);
     Object.keys(classHours).sort().forEach(classKey => {
         const subjects = classHours[classKey];
         Object.keys(subjects).sort().forEach(subj => {
@@ -1007,9 +1067,11 @@ window.toggleTeacherTimetable = function(idx) {
                            isDone ? 'bg-green-100 text-green-700 border-green-300' : 
                            'bg-gray-50 text-gray-700 border-gray-200';
             const icon = ch.isSpecial ? '⭐' : '';
+            const paletteClass = isCompleted ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-80';
+            const paletteOnClick = isCompleted ? '' : `onclick="selectTeacherClass(${idx}, '${classKey}', '${subj}')"`;
             paletteHtml += `
-                <div class="inline-flex items-center px-2 py-1 rounded border-2 text-xs ${bgClass} cursor-pointer hover:opacity-80 mb-1" 
-                     onclick="selectTeacherClass(${idx}, '${classKey}', '${subj}')" 
+                <div class="inline-flex items-center px-2 py-1 rounded border-2 text-xs ${bgClass} ${paletteClass} mb-1" 
+                     ${paletteOnClick}
                      title="${subj}">
                     ${icon}<span class="font-bold">${classKey}</span> <span class="text-gray-600 ml-1">${subj}</span> <span class="ml-1 font-bold">${ch.current}/${ch.target}</span>
                 </div>`;
@@ -1023,10 +1085,13 @@ window.toggleTeacherTimetable = function(idx) {
         gridHtml += `<tr><td class="bg-gray-50 font-bold text-xs p-2">${classPeriodLabels[r]}</td>`;
         for(let c = 0; c < 5; c++) {
             const val = t.schedule[r][c] || '';
-            gridHtml += `<td class="h-12 border cursor-pointer hover:bg-indigo-50" 
-                onclick="clickTeacherCell(${idx}, ${r}, ${c})"
-                onkeydown="handleTeacherCellKeydown(event, ${idx}, ${r}, ${c})"
-                tabindex="0">
+            const cellHover = isCompleted ? '' : 'cursor-pointer hover:bg-indigo-50';
+            const cellLocked = isCompleted ? 'cell-locked' : '';
+            const cellOnClick = isCompleted ? '' : `onclick="clickTeacherCell(${idx}, ${r}, ${c})"`;
+            const cellKeydown = isCompleted ? '' : `onkeydown="handleTeacherCellKeydown(event, ${idx}, ${r}, ${c})" tabindex="0"`;
+            gridHtml += `<td class="h-12 border ${cellHover} ${cellLocked}" 
+                ${cellOnClick}
+                ${cellKeydown}>
                 <div class="w-full h-full text-center text-sm font-medium flex items-center justify-center">${val || ''}</div>
             </td>`;
         }

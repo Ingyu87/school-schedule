@@ -79,6 +79,7 @@ function generateSchoolTimetableData() {
         for (let c = 1; c <= classCount; c++) {
             const classKey = `${gr}-${c}반`;
             const timetable = state.timetables[classKey];
+            const isCompleted = state.timetableCompletion?.[classKey] === true;
             
             if (!timetable) continue;
             
@@ -96,19 +97,14 @@ function generateSchoolTimetableData() {
                 
                 // 월~금 (5일)
                 for (let day = 0; day < 5; day++) {
-                    const cellValue = timetable[period][day] || '';
+                    const cellValue = isCompleted ? (timetable[period][day] || '') : '';
                     
                     // 셀 값 포맷팅
                     let formattedValue = cellValue;
                     
-                    // 전담 교사 과목인지 확인 (파란색 표시)
-                    const isJeondam = isJeondamSubject(gradeNum, c, cellValue, period, day);
-                    
-                    // 시설 사용 확인 (◎ 표시)
-                    const facilitySymbol = getFacilitySymbol(gradeNum, c, period, day);
-                    
-                    if (facilitySymbol) {
-                        formattedValue = facilitySymbol + formattedValue;
+                    const facilityNames = getFacilityNamesForClass(gradeNum, c, period, day);
+                    if (facilityNames.length) {
+                        formattedValue = facilityNames.join('+');
                     }
                     
                     row.push(formattedValue);
@@ -196,6 +192,45 @@ function getFacilitySymbol(gradeNum, classNum, period, day) {
     }
     
     return '';
+}
+
+// 시설 이름 반환 (동적 시설 지원)
+function getFacilityNamesForClass(gradeNum, classNum, period, day) {
+    const classKey = `${gradeNum}-${classNum}`;
+    let facRow = period;
+    if (period === 3) {
+        facRow = (gradeNum <= 3) ? 4 : 3;
+    } else if (period >= 4) {
+        facRow = period + 1;
+    }
+    
+    const names = [];
+    if (state.facilityList) {
+        state.facilityList.forEach(facId => {
+            if (state.facilities[facId] && state.facilities[facId][facRow]) {
+                const facValue = state.facilities[facId][facRow][day] || '';
+                if (facValue.includes(classKey)) {
+                    names.push(state.facilityNames?.[facId] || facId);
+                }
+            }
+        });
+    } else {
+        if (state.facilities.gym && state.facilities.gym[facRow]) {
+            const gymValue = state.facilities.gym[facRow][day] || '';
+            if (gymValue.includes(classKey)) {
+                names.push(state.facilityNames?.gym || '느티홀 (체육관)');
+            }
+        }
+        
+        if (state.facilities.lib && state.facilities.lib[facRow]) {
+            const libValue = state.facilities.lib[facRow][day] || '';
+            if (libValue.includes(classKey)) {
+                names.push(state.facilityNames?.lib || '글샘터 (도서관)');
+            }
+        }
+    }
+    
+    return names;
 }
 
 // 스케줄 엔트리 파싱 (utils.js에 있는 함수와 동일)

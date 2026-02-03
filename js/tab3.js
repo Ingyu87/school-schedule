@@ -287,7 +287,7 @@ function countUse(k, s) {
                             if (classes.includes(sk)) {
                                 // 체육은 gym, 국어는 lib에만 카운트 (기존 로직 유지)
                                 if ((s === '체육' && facId === 'gym') || (s === '국어' && facId === 'lib')) {
-                                    c += classes.length > 1 ? 0.5 : 1;
+                                    c += 1;
                                 }
                             }
                         }
@@ -303,7 +303,7 @@ function countUse(k, s) {
                     if (v) {
                         const classes = v.split('/').map(x => x.trim());
                         if (classes.includes(sk)) {
-                            c += classes.length > 1 ? 0.5 : 1;
+                            c += 1;
                         }
                     }
                 });
@@ -315,7 +315,7 @@ function countUse(k, s) {
                     if (v) {
                         const classes = v.split('/').map(x => x.trim());
                         if (classes.includes(sk)) {
-                            c += classes.length > 1 ? 0.5 : 1;
+                            c += 1;
                         }
                     }
                 });
@@ -660,11 +660,18 @@ window.downloadExcel = function() {
         // 현재 선택된 학급의 시간표만 생성
         const tt = state.timetables[k];
         const data = [['교시', '월', '화', '수', '목', '금']];
+        const gr = k.split('-')[0];
+        const gradeNum = parseInt(gr);
+        const classNum = parseInt(k.split('-')[1]);
         
         classPeriods.forEach((p, i) => {
             const row = [p];
             for (let j = 0; j < 5; j++) {
-                row.push(tt[i] ? tt[i][j] || '' : '');
+                const cellValue = tt[i] ? tt[i][j] || '' : '';
+                const facilityNames = typeof getFacilityNamesForClass === 'function'
+                    ? getFacilityNamesForClass(gradeNum, classNum, i, j)
+                    : [];
+                row.push(facilityNames.length ? facilityNames.join('+') : cellValue);
             }
             data.push(row);
         });

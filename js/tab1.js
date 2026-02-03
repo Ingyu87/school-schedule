@@ -26,6 +26,7 @@ function renderTab1() {
         }
         
         const facilityName = state.facilityNames[facId] || `시설${idx + 1}`;
+        const isFacilityCompleted = state.facilityCompletion?.[facId] || false;
         const iconClass = facId === 'gym' ? 'fa-basketball text-orange-500' : 
                          facId === 'lib' ? 'fa-book-open text-green-600' : 
                          'fa-building text-blue-500';
@@ -37,7 +38,9 @@ function renderTab1() {
             for(let j = 0; j < 5; j++) {
                 const val = state.facilities[facId][i] ? state.facilities[facId][i][j] || '' : '';
                 const cellClass = (i === 3) ? 'bg-pink-50/30' : (i === 4) ? 'bg-indigo-50/30' : '';
-                gridHtml += `<td class="${cellClass}"><input class="grid-input" 
+                const lockAttr = isFacilityCompleted ? 'disabled' : '';
+                const lockClass = isFacilityCompleted ? 'locked' : '';
+                gridHtml += `<td class="${cellClass}"><input class="grid-input ${lockClass}" 
                     data-grid="${facId}" data-row="${i}" data-col="${j}"
                     value="${val}" 
                     onchange="fmtFacility(this); updFac('${facId}',${i},${j},this.value)" 
@@ -52,12 +55,11 @@ function renderTab1() {
                     ondragover="handleDragOver(event)"
                     ondragleave="handleDragLeave(event)"
                     ondrop="handleDrop(event)"
-                    placeholder=""></td>`;
+                    placeholder="" ${lockAttr}></td>`;
             }
             gridHtml += '</tr>';
         }
         
-        const isFacilityCompleted = state.facilityCompletion?.[facId] || false;
         const cardHtml = `
             <div class="card">
                 <div class="flex justify-between items-center mb-3">
@@ -99,6 +101,11 @@ function renderTab1() {
 }
 
 window.updFac = function(t, r, c, v) {
+    if (state.facilityCompletion?.[t]) {
+        showAlert('완료 상태에서는 수정할 수 없습니다.<br>완료를 해제한 뒤 수정하세요.');
+        renderTab1();
+        return;
+    }
     v = v.trim();
     // 쉼표를 슬래시로 변환
     v = v.replace(/,/g, '/');
@@ -250,9 +257,15 @@ window.toggleFacilityCompletion = function(facId) {
     if (checkAllFacilitiesCompleted()) {
         showAlert('모든 시설 시간표가 완료되었습니다. 이제 "2. 교과전담 교사별 시간표" 탭을 사용할 수 있습니다.', 'success');
     }
+    
+    renderTab1();
 };
 
 window.resetFacility = function(type) {
+    if (state.facilityCompletion?.[type]) {
+        showAlert('완료 상태에서는 수정할 수 없습니다.<br>완료를 해제한 뒤 수정하세요.');
+        return;
+    }
     const name = state.facilityNames?.[type] || (type === 'gym' ? '체육관' : type === 'lib' ? '도서관' : '시설');
     showConfirm(`${name} 시간표를 초기화하시겠습니까?`, () => {
         state.facilities[type] = grid(7, 5);
