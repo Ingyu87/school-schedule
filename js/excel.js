@@ -99,8 +99,6 @@ function generateSchoolTimetableData() {
         for (let c = 1; c <= classCount; c++) {
             const classKey = `${gr}-${c}반`;
             const timetable = state.timetables[classKey];
-            const isCompleted = state.timetableCompletion?.[classKey] === true;
-            
             if (!timetable) continue;
             
             // 학년, 반 정보
@@ -113,7 +111,7 @@ function generateSchoolTimetableData() {
             // 월~금 * 교시 1~6
             for (let day = 0; day < 5; day++) {
                 for (let period = 0; period < 6; period++) {
-                    const cellValue = isCompleted ? (timetable[period][day] || '') : '';
+                    const cellValue = timetable[period][day] || '';
                     const facilityNames = getFacilityNamesForClass(gradeNum, c, period, day);
                     let formattedValue = cellValue;
                     let type = '';
@@ -224,13 +222,13 @@ function getFacilityNamesForClass(gradeNum, classNum, period, day) {
         facRow = period + 1;
     }
     
-    const names = [];
+    const names = new Set();
     if (state.facilityList) {
         state.facilityList.forEach(facId => {
             if (state.facilities[facId] && state.facilities[facId][facRow]) {
                 const facValue = state.facilities[facId][facRow][day] || '';
                 if (facValue.includes(classKey)) {
-                    names.push(state.facilityNames?.[facId] || facId);
+                    names.add(state.facilityNames?.[facId] || facId);
                 }
             }
         });
@@ -238,19 +236,19 @@ function getFacilityNamesForClass(gradeNum, classNum, period, day) {
         if (state.facilities.gym && state.facilities.gym[facRow]) {
             const gymValue = state.facilities.gym[facRow][day] || '';
             if (gymValue.includes(classKey)) {
-                names.push(state.facilityNames?.gym || '느티홀 (체육관)');
+                names.add(state.facilityNames?.gym || '느티홀 (체육관)');
             }
         }
         
         if (state.facilities.lib && state.facilities.lib[facRow]) {
             const libValue = state.facilities.lib[facRow][day] || '';
             if (libValue.includes(classKey)) {
-                names.push(state.facilityNames?.lib || '글샘터 (도서관)');
+                names.add(state.facilityNames?.lib || '글샘터 (도서관)');
             }
         }
     }
     
-    return names;
+    return Array.from(names);
 }
 
 // 스케줄 엔트리 파싱 (utils.js에 있는 함수와 동일)
