@@ -45,10 +45,10 @@ window.generateFinalExcel = function() {
         
         ws['!merges'] = merges;
         
-        // 셀 스타일 적용 (교과: 노란색, 시설: 초록색)
+        // 셀 스타일 적용 (전담: 주황색, 시설: 초록색)
         if (sheetStyles && Array.isArray(sheetStyles)) {
             const facilityFill = { patternType: 'solid', fgColor: { rgb: 'FFC6EFCE' } };
-            const subjectFill = { patternType: 'solid', fgColor: { rgb: 'FFFFF2CC' } };
+            const teacherFill = { patternType: 'solid', fgColor: { rgb: 'FFFFE0B2' } };
             
             sheetStyles.forEach((row, r) => {
                 if (!row) return;
@@ -57,10 +57,53 @@ window.generateFinalExcel = function() {
                     const cellAddr = XLSX.utils.encode_cell({ r, c });
                     const cell = ws[cellAddr];
                     if (!cell) return;
-                    if (type === 'facility') cell.s = { fill: facilityFill };
-                    if (type === 'subject') cell.s = { fill: subjectFill };
+                    if (type === 'facility') cell.s = { ...(cell.s || {}), fill: facilityFill };
+                    if (type === 'teacher') cell.s = { ...(cell.s || {}), fill: teacherFill };
                 });
             });
+        }
+        
+        // 구분선(요일/학년) 강조
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        const thin = { style: 'thin', color: { rgb: 'FFD0D0D0' } };
+        const thick = { style: 'medium', color: { rgb: 'FF808080' } };
+        
+        // 학년별 마지막 행 계산 (헤더 2행 이후부터 시작)
+        const gradeEndRows = [];
+        let rowCursor = 2;
+        ['1학년', '2학년', '3학년', '4학년', '5학년', '6학년'].forEach(gr => {
+            const classCount = state.config[gr]?.classes || 0;
+            if (classCount > 0) {
+                const endRow = rowCursor + classCount - 1;
+                gradeEndRows.push(endRow);
+                rowCursor += classCount;
+            }
+        });
+        const gradeEndSet = new Set(gradeEndRows);
+        const dayBoundaryCols = new Set([7, 13, 19, 25, 31]); // 월~금 끝 열
+        
+        for (let r = range.s.r; r <= range.e.r; r++) {
+            for (let c = range.s.c; c <= range.e.c; c++) {
+                const cellAddr = XLSX.utils.encode_cell({ r, c });
+                const cell = ws[cellAddr];
+                if (!cell) continue;
+                
+                const border = {
+                    top: thin,
+                    bottom: thin,
+                    left: thin,
+                    right: thin
+                };
+                
+                if (dayBoundaryCols.has(c)) {
+                    border.right = thick;
+                }
+                if (gradeEndSet.has(r)) {
+                    border.bottom = thick;
+                }
+                
+                cell.s = { ...(cell.s || {}), border };
+            }
         }
         
         // 시트 추가
@@ -113,14 +156,18 @@ function generateSchoolTimetableData() {
                 for (let period = 0; period < 6; period++) {
                     const cellValue = timetable[period][day] || '';
                     const facilityNames = getFacilityNamesForClass(gradeNum, c, period, day);
+                    const teacherSubj = getTeacherSubjectForClass(gradeNum, c, period, day);
                     let formattedValue = cellValue;
                     let type = '';
                     
                     if (facilityNames.length) {
                         formattedValue = facilityNames.join('+');
                         type = 'facility';
-                    } else if (cellValue) {
-                        type = 'subject';
+                    } else if (!formattedValue && teacherSubj) {
+                        formattedValue = teacherSubj;
+                        type = 'teacher';
+                    } else if (formattedValue && teacherSubj && formattedValue === teacherSubj) {
+                        type = 'teacher';
                     }
                     
                     row.push(formattedValue);
@@ -249,6 +296,37 @@ function getFacilityNamesForClass(gradeNum, classNum, period, day) {
     }
     
     return Array.from(names);
+}
+
+// 전담 교사 시간표에서 과목 추출
+function getTeacherSubjectForClass(gradeNum, classNum, period, day) {
+    const classKey = `${gradeNum}-${classNum}`;
+    const subjects = new Set();
+    
+    state.teachers.forEach(t => {
+        const schedule = t.schedule;
+        if (!schedule || !schedule[period]) return;
+        const cellValue = schedule[period][day] || '';
+        if (!cellValue) return;
+        
+        const entries = parseScheduleEntries(cellValue);
+        entries.forEach(entry => {
+            if (entry.classKey !== classKey) return;
+            let displaySubj = entry.subject;
+            if (!displaySubj) {
+                const assign = (t.assignments || []).find(a => {
+                    const subj = a.subject.replace('[특수]', '');
+                    return a.grade == gradeNum && a.classNum == classNum && !subj.includes('보건');
+                });
+                if (assign) displaySubj = assign.subject.replace('[특수]', '');
+            }
+            if (displaySubj && !displaySubj.includes('보건')) {
+                subjects.add(displaySubj);
+            }
+        });
+    });
+    
+    return Array.from(subjects).join(', ');
 }
 
 // 스케줄 엔트리 파싱 (utils.js에 있는 함수와 동일)
