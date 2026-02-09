@@ -26,7 +26,7 @@ function renderCurrentTab() {
 function updateTabAccessibility() {
     // 탭 완료 상태 확인
     const tab0Completed = state.tabCompletion?.tab0 || false;
-    const tab1Completed = state.tabCompletion?.tab1 || false;
+    let tab1Completed = state.tabCompletion?.tab1 || false;
     const allTeachersCompleted = state.teachers.every(t => t.completed);
     
     // Tab 1 (시설 시간표) 활성화/비활성화

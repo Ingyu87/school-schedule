@@ -86,14 +86,14 @@ function generateTeacherTimetableData(teacher) {
     
     // 7개 교시 (4교시가 그룹별로 2행)
     const periods = getPeriods();
-    const periodLabels = periods.map(p => p.replace('교시', '').replace(/[()]/g, ' ').trim());
+    const periodLabels = periods.map(p => p.replace(/\(/g, ' ('));
     
     for (let period = 0; period < 7; period++) {
         const row = [periodLabels[period]];
         
         // 월~금 (5일)
         for (let day = 0; day < 5; day++) {
-            const cellValue = teacher.schedule[period][day] || '';
+            const cellValue = (teacher.schedule && teacher.schedule[period] && teacher.schedule[period][day]) || '';
             
             // 셀 값 포맷팅
             let formattedValue = '';

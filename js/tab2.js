@@ -809,7 +809,7 @@ window.clickTeacherCell = function(teacherIdx, r, c, event) {
     const t = state.teachers[teacherIdx];
     if (!t.schedule) t.schedule = grid(7,5);
     
-    const currentEntries = parseScheduleEntries(t.schedule[r][c] || '');
+    let currentEntries = parseScheduleEntries(t.schedule[r][c] || '');
     const hasSelection = selectedTeacherClass.teacherIdx === teacherIdx && selectedTeacherClass.classKey;
     const setCell = (entries) => {
         t.schedule[r][c] = entries.length ? formatScheduleEntries(entries) : '';

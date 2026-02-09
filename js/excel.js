@@ -154,7 +154,7 @@ function generateSchoolTimetableData() {
             // 월~금 * 교시 1~6
             for (let day = 0; day < 5; day++) {
                 for (let period = 0; period < 6; period++) {
-                    const cellValue = timetable[period][day] || '';
+                    const cellValue = (timetable[period] && timetable[period][day]) || '';
                     const facilityNames = getFacilityNamesForClass(gradeNum, c, period, day);
                     const teacherSubj = getTeacherSubjectForClass(gradeNum, c, period, day);
                     let formattedValue = cellValue;

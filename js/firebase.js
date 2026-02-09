@@ -180,8 +180,11 @@ function setupFirebaseListener(doc, onSnapshot, setDoc) {
                 if(data.timetables) {
                     state.timetables = {};
                     Object.keys(data.timetables).forEach(k => {
-                        try { state.timetables[k] = JSON.parse(data.timetables[k]); } 
-                        catch(e) { state.timetables[k] = grid(6,5); }
+                        try {
+                            state.timetables[k] = typeof data.timetables[k] === 'string'
+                                ? JSON.parse(data.timetables[k])
+                                : (data.timetables[k] || grid(6,5));
+                        } catch(e) { state.timetables[k] = grid(6,5); }
                     });
                 }
                 if(data.curriculum) state.curriculum = data.curriculum;
@@ -400,6 +403,9 @@ function loadFromLocalStorage() {
                                 data.facilities[fac].push(Array(5).fill(''));
                             }
                         }
+                    } else {
+                        // facilityList에는 있지만 facilities에 없는 시설 초기화
+                        data.facilities[fac] = grid(7, 5);
                     }
                 });
             }
