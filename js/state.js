@@ -117,12 +117,12 @@ let state = {
         ]
     },
     teachers: [
-        {id:1, name:'전담1', assignments: [], schedule: grid(6,5), completed: false}, 
-        {id:2, name:'전담2', assignments: [], schedule: grid(6,5), completed: false},
-        {id:3, name:'전담3', assignments: [], schedule: grid(6,5), completed: false}, 
-        {id:4, name:'전담4', assignments: [], schedule: grid(6,5), completed: false},
-        {id:5, name:'전담5', assignments: [], schedule: grid(6,5), completed: false}, 
-        {id:6, name:'전담6', assignments: [], schedule: grid(6,5), completed: false}
+        {id:1, name:'전담1', assignments: [], schedule: grid(7,5), completed: false}, 
+        {id:2, name:'전담2', assignments: [], schedule: grid(7,5), completed: false},
+        {id:3, name:'전담3', assignments: [], schedule: grid(7,5), completed: false}, 
+        {id:4, name:'전담4', assignments: [], schedule: grid(7,5), completed: false},
+        {id:5, name:'전담5', assignments: [], schedule: grid(7,5), completed: false}, 
+        {id:6, name:'전담6', assignments: [], schedule: grid(7,5), completed: false}
     ],
     specialSupport: [],
     timetables: {},
@@ -141,6 +141,68 @@ let state = {
         '6학년': { '국어': 5, '수학': 5, '사회': 3, '과학': 3, '영어': 3, '음악': 2, '미술': 1, '체육': 3, '실과': 1, '도덕': 1, '통합': 0, '창체': 2 }
     }
 };
+
+// 교사 시간표 6x5 → 7x5 마이그레이션
+function migrateTeacherSchedule(teacher) {
+    if (!teacher.schedule || !Array.isArray(teacher.schedule)) {
+        teacher.schedule = grid(7, 5);
+        return;
+    }
+    if (teacher.schedule.length >= 7) return; // 이미 7행
+    if (teacher.schedule.length !== 6) {
+        teacher.schedule = grid(7, 5);
+        return;
+    }
+    
+    // 6행 → 7행 변환
+    // old[0]=1교시, old[1]=2교시, old[2]=3교시, old[3]=4교시, old[4]=5교시, old[5]=6교시
+    // new[0]=1교시, new[1]=2교시, new[2]=3교시, new[3]=4교시(upper), new[4]=4교시(lower), new[5]=5교시, new[6]=6교시
+    const old = teacher.schedule;
+    const newSched = grid(7, 5);
+    
+    // 1~3교시: 그대로 복사
+    for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 5; c++) {
+            newSched[r][c] = old[r][c] || '';
+        }
+    }
+    
+    // 4교시 (old[3]): 셀 내용의 학년을 보고 upper/lower로 분배
+    for (let c = 0; c < 5; c++) {
+        const cellVal = old[3][c] || '';
+        if (!cellVal) continue;
+        
+        const entries = cellVal.split('/').map(x => x.trim()).filter(x => x);
+        const upperEntries = [];
+        const lowerEntries = [];
+        
+        entries.forEach(entry => {
+            const match = entry.match(/^(\d+)-/);
+            if (match) {
+                const gradeNum = parseInt(match[1]);
+                if (isLowerGroup(gradeNum)) {
+                    lowerEntries.push(entry);
+                } else {
+                    upperEntries.push(entry);
+                }
+            } else {
+                // 학년을 알 수 없으면 upper에 넣음
+                upperEntries.push(entry);
+            }
+        });
+        
+        if (upperEntries.length) newSched[3][c] = upperEntries.join('/');
+        if (lowerEntries.length) newSched[4][c] = lowerEntries.join('/');
+    }
+    
+    // 5교시, 6교시: old[4]→new[5], old[5]→new[6]
+    for (let c = 0; c < 5; c++) {
+        newSched[5][c] = old[4][c] || '';
+        newSched[6][c] = old[5][c] || '';
+    }
+    
+    teacher.schedule = newSched;
+}
 
 let editorState = { classKey: null, selectedSubj: null };
 let activeTab = 'tab0';

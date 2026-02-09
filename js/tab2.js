@@ -519,7 +519,7 @@ window.resetTeacherAll = function(idx) {
     
     showConfirm(`${t.name} 선생님 정보를 전체 초기화하시겠습니까?`, () => {
         t.assignments = [];
-        t.schedule = grid(6, 5);
+        t.schedule = grid(7, 5);
         t.completed = false;
         saveData({ teachers: state.teachers });
         renderTab2();
@@ -533,14 +533,16 @@ function renderTeacherTimetables() {
     if (!tv) return;
     tv.innerHTML = '';
     
-    const classPeriodLabels = ["1교시","2교시","3교시","4교시","5교시","6교시"];
+    const teacherPeriodLabels = getPeriodLabels();
     const lowerTimes = state.scheduleTimes?.lower || {};
     const upperTimes = state.scheduleTimes?.upper || {};
+    const facPeriodKeys = ['1교시','2교시','3교시','4교시','4교시','5교시','6교시'];
     
     state.teachers.forEach((t, idx) => {
         if (!t.schedule || !Array.isArray(t.schedule)) {
-            t.schedule = grid(6,5);
+            t.schedule = grid(7,5);
         }
+        migrateTeacherSchedule(t);
         
         // 배정된 반-과목별 시수 계산 (보건 제외)
         const classHours = {}; // { "3-1": { "영어": { target: 2, current: 0 }, ... }, ... }
@@ -630,13 +632,14 @@ function renderTeacherTimetables() {
         const gridId = `teacher-${idx}`;
         let gridHtml = '';
         const isCompleted = isTeacherCompleted(idx);
-        for(let r = 0; r < 6; r++) {
-            const pKey = classPeriodLabels[r];
-            const lt = lowerTimes[pKey] || '';
-            const ut = upperTimes[pKey] || '';
-            const timeLabel = lt === ut ? lt : (lt && ut ? `${lt}` : lt || ut);
-            const timeHtml = timeLabel ? `<br><span class="text-[10px] text-gray-400 font-normal">${timeLabel}</span>` : '';
-            gridHtml += `<tr><td class="bg-gray-50 font-bold text-xs">${pKey}${timeHtml}</td>`;
+        for(let r = 0; r < 7; r++) {
+            const rowClass = (r === 3) ? 'bg-pink-50' : (r === 4) ? 'bg-indigo-50' : 'bg-gray-50';
+            let facTime = '';
+            if (r === 3) facTime = upperTimes['4교시'] || '';
+            else if (r === 4) facTime = lowerTimes['4교시'] || '';
+            else facTime = lowerTimes[facPeriodKeys[r]] || '';
+            const timeHtml = facTime ? `<br><span class="text-[10px] text-gray-400 font-normal">${facTime}</span>` : '';
+            gridHtml += `<tr><td class="${rowClass} font-bold text-xs">${teacherPeriodLabels[r]}${timeHtml}</td>`;
             for(let c = 0; c < 5; c++) {
                 const val = t.schedule[r][c] || '';
                 const parsedEntries = parseScheduleEntries(val);
@@ -737,7 +740,7 @@ window.onTeacherCellInput = function(teacherIdx, r, c, value) {
         return;
     }
     const t = state.teachers[teacherIdx];
-    if (!t.schedule) t.schedule = grid(6,5);
+    if (!t.schedule) t.schedule = grid(7,5);
     
     // 입력값 파싱
     const entries = parseScheduleEntries(value);
@@ -786,7 +789,7 @@ window.handleTeacherCellKeydown = function(e, teacherIdx, r, c) {
     if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault();
         const t = state.teachers[teacherIdx];
-        if (!t.schedule) t.schedule = grid(6,5);
+        if (!t.schedule) t.schedule = grid(7,5);
         t.schedule[r][c] = '';
         saveData({teachers: state.teachers});
         
@@ -804,7 +807,7 @@ window.clickTeacherCell = function(teacherIdx, r, c, event) {
         return;
     }
     const t = state.teachers[teacherIdx];
-    if (!t.schedule) t.schedule = grid(6,5);
+    if (!t.schedule) t.schedule = grid(7,5);
     
     const currentEntries = parseScheduleEntries(t.schedule[r][c] || '');
     const hasSelection = selectedTeacherClass.teacherIdx === teacherIdx && selectedTeacherClass.classKey;
@@ -913,12 +916,6 @@ window.updTName = function(i, n) {
 };
 
 function checkAllConflicts(classKey, row, col, source, sourceIdx) {
-    // "4-1(과학)" 형태에서 "4-1"만 추출
-    const extractClassKey = (entry) => {
-        const match = entry.match(/^(\d+-\d+)/);
-        return match ? match[1] : entry;
-    };
-    
     const entries = classKey.split('/').map(x => {
         const match = x.trim().match(/^(\d+-\d+)/);
         return match ? match[1] : x.trim();
@@ -928,15 +925,18 @@ function checkAllConflicts(classKey, row, col, source, sourceIdx) {
         const gradeNum = parseInt(cls.split('-')[0]);
         if (isNaN(gradeNum)) continue;
         
-        // 시설 시간표 행 계산 (학급 시간표 행 → 시설 시간표 행)
-        let facRow = row;
-        if (row === 3) {
-            // 4교시: 1~3학년은 4번 행, 4~6학년은 3번 행
-            facRow = isLowerGroup(gradeNum) ? 4 : 3;
-        } else if (row >= 4) {
-            // 5교시 이상: +1
-            facRow = row + 1;
+        // 4교시 그룹 검증: upper 4교시(row 3)에 lower 그룹 학년 배정 금지, 반대도
+        if (row === 3 && isLowerGroup(gradeNum)) {
+            const upperLabel = getUpperGradeLabel();
+            return `${cls}은(는) 이 행(4교시-${upperLabel})에 배정할 수 없습니다. 아래 행에 입력하세요.`;
         }
+        if (row === 4 && !isLowerGroup(gradeNum)) {
+            const lowerLabel = getLowerGradeLabel();
+            return `${cls}은(는) 이 행(4교시-${lowerLabel})에 배정할 수 없습니다. 위 행에 입력하세요.`;
+        }
+        
+        // 교사 시간표 행 === 시설 시간표 행 (둘 다 7행)
+        const facRow = row;
         
         // 시설 배정 확인 (우선순위 1) - 동적 시설 지원
         if (state.facilityList) {
@@ -950,7 +950,6 @@ function checkAllConflicts(classKey, row, col, source, sourceIdx) {
                 }
             }
         } else {
-            // 기존 호환성 (facilityList가 없을 때)
             if (state.facilities.gym && state.facilities.gym[facRow]) {
                 const gymVal = state.facilities.gym[facRow][col] || '';
                 if (checkFacilityAssignment(gymVal, cls)) {
@@ -975,7 +974,6 @@ function checkAllConflicts(classKey, row, col, source, sourceIdx) {
                     const match = x.trim().match(/^(\d+-\d+)/);
                     return match ? match[1] : x.trim();
                 });
-                // 같은 반이 배정되어 있는지 확인
                 if (otherEntries.includes(cls)) {
                     return `${cls}은(는) 이 시간에 ${state.teachers[i].name} 선생님에게 배정되어 있습니다.`;
                 }
@@ -991,7 +989,7 @@ window.addTeacher = function() {
         id: state.teachers.length + 1, 
         name: '신규', 
         assignments: [], 
-        schedule: grid(6,5)
+        schedule: grid(7,5)
     }); 
     saveData({teachers: state.teachers}); 
     renderTab2(); 
@@ -1015,7 +1013,7 @@ window.resetTeacherSchedule = function(idx) {
         return;
     }
     showConfirm(`${state.teachers[idx].name} 선생님 시간표를 초기화하시겠습니까?`, () => {
-        state.teachers[idx].schedule = grid(6, 5);
+        state.teachers[idx].schedule = grid(7, 5);
         saveData({ teachers: state.teachers });
         renderTeacherTimetables();
     });
@@ -1040,8 +1038,9 @@ window.toggleTeacherTimetable = function(idx) {
     
     // 시간표 렌더링
     if (!t.schedule || !Array.isArray(t.schedule)) {
-        t.schedule = grid(6,5);
+        t.schedule = grid(7,5);
     }
+    migrateTeacherSchedule(t);
     
     // 배정된 반-과목별 시수 계산
     const classHours = {};
@@ -1115,17 +1114,19 @@ window.toggleTeacherTimetable = function(idx) {
     });
     
     // 시간표 그리드 HTML
-    const classPeriodLabels2 = ["1교시","2교시","3교시","4교시","5교시","6교시"];
-    const lowerTimes2 = state.scheduleTimes?.lower || {};
-    const upperTimes2 = state.scheduleTimes?.upper || {};
+    const modalPeriodLabels = getPeriodLabels();
+    const modalLowerTimes = state.scheduleTimes?.lower || {};
+    const modalUpperTimes = state.scheduleTimes?.upper || {};
+    const modalPeriodKeys = ['1교시','2교시','3교시','4교시','4교시','5교시','6교시'];
     let gridHtml = '';
-    for(let r = 0; r < 6; r++) {
-        const pKey2 = classPeriodLabels2[r];
-        const lt2 = lowerTimes2[pKey2] || '';
-        const ut2 = upperTimes2[pKey2] || '';
-        const timeLabel2 = lt2 === ut2 ? lt2 : (lt2 && ut2 ? `${lt2}` : lt2 || ut2);
-        const timeHtml2 = timeLabel2 ? `<br><span class="text-[10px] text-gray-400 font-normal">${timeLabel2}</span>` : '';
-        gridHtml += `<tr><td class="bg-gray-50 font-bold text-xs p-2">${pKey2}${timeHtml2}</td>`;
+    for(let r = 0; r < 7; r++) {
+        const rowClass2 = (r === 3) ? 'bg-pink-50' : (r === 4) ? 'bg-indigo-50' : 'bg-gray-50';
+        let facTime2 = '';
+        if (r === 3) facTime2 = modalUpperTimes['4교시'] || '';
+        else if (r === 4) facTime2 = modalLowerTimes['4교시'] || '';
+        else facTime2 = modalLowerTimes[modalPeriodKeys[r]] || '';
+        const timeHtml2 = facTime2 ? `<br><span class="text-[10px] text-gray-400 font-normal">${facTime2}</span>` : '';
+        gridHtml += `<tr><td class="${rowClass2} font-bold text-xs p-2">${modalPeriodLabels[r]}${timeHtml2}</td>`;
         for(let c = 0; c < 5; c++) {
             const val = t.schedule[r][c] || '';
             const cellHover = isCompleted ? '' : 'cursor-pointer hover:bg-indigo-50';

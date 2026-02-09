@@ -183,18 +183,26 @@ function generateSchoolTimetableData() {
     return { data, styles };
 }
 
+// 학급 시간표 행 → 교사/시설 시간표 행 (7행) 매핑
+function classRowToTeacherRow(period, gradeNum) {
+    if (period < 3) return period;
+    if (period === 3) return isLowerGroup(gradeNum) ? 4 : 3;
+    return period + 1; // 4→5, 5→6
+}
+
 // 전담 과목인지 확인
 function isJeondamSubject(gradeNum, classNum, subject, period, day) {
     if (!subject) return false;
     
     const classKey = `${gradeNum}-${classNum}`;
+    const teacherRow = classRowToTeacherRow(period, gradeNum);
     
     // 전담 교사 시간표에서 확인
     for (let teacher of state.teachers) {
         const schedule = teacher.schedule;
-        if (!schedule || !schedule[period]) continue;
+        if (!schedule || !schedule[teacherRow]) continue;
         
-        const cellValue = schedule[period][day] || '';
+        const cellValue = schedule[teacherRow][day] || '';
         
         // 파싱
         const entries = parseScheduleEntries(cellValue);
@@ -302,11 +310,12 @@ function getFacilityNamesForClass(gradeNum, classNum, period, day) {
 function getTeacherSubjectForClass(gradeNum, classNum, period, day) {
     const classKey = `${gradeNum}-${classNum}`;
     const subjects = new Set();
+    const teacherRow = classRowToTeacherRow(period, gradeNum);
     
     state.teachers.forEach(t => {
         const schedule = t.schedule;
-        if (!schedule || !schedule[period]) return;
-        const cellValue = schedule[period][day] || '';
+        if (!schedule || !schedule[teacherRow]) return;
+        const cellValue = schedule[teacherRow][day] || '';
         if (!cellValue) return;
         
         const entries = parseScheduleEntries(cellValue);

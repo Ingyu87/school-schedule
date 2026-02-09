@@ -151,10 +151,11 @@ function renderEditorGrid() {
             }
             
             // 전담 교사 시간표에서 배정 확인 (보건 제외)
+            // 교사 시간표는 7행 (시설과 동일), 학급은 6행이므로 facRow 사용
             let teacherSubjs = [];
             state.teachers.forEach(t => {
-                if (t.schedule && t.schedule[i] && t.schedule[i][j]) {
-                    const entries = parseScheduleEntries(t.schedule[i][j]);
+                if (t.schedule && t.schedule[facRow] && t.schedule[facRow][j]) {
+                    const entries = parseScheduleEntries(t.schedule[facRow][j]);
                     entries.forEach(entry => {
                         if (entry.classKey === shortK) {
                             let displaySubj = entry.subject;
@@ -472,9 +473,12 @@ function isTeacherAssigned(classRow, col, classKey) {
     const gradeNum = parseInt(classKey.split('-')[0]);
     const classNum = parseInt(classKey.split('-')[1]);
     
+    // 학급 시간표 행 → 교사 시간표 행 (7행 구조)
+    const teacherRow = getFacilityRow(classRow, gradeNum);
+    
     for (const t of state.teachers) {
-        if (t.schedule && t.schedule[classRow] && t.schedule[classRow][col]) {
-            const entries = t.schedule[classRow][col].split('/').map(x => {
+        if (t.schedule && t.schedule[teacherRow] && t.schedule[teacherRow][col]) {
+            const entries = t.schedule[teacherRow][col].split('/').map(x => {
                 // "4-1(과학)" 형태면 "4-1"만 추출
                 const match = x.trim().match(/^(\d+-\d+)/);
                 return match ? match[1] : x.trim();

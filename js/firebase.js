@@ -150,11 +150,15 @@ function setupFirebaseListener(doc, onSnapshot, setDoc) {
                 if(data.allocations) state.allocations = data.allocations;
                 if(data.specialSupport) state.specialSupport = data.specialSupport;
                 if(data.teachers) {
-                    state.teachers = data.teachers.map(t => ({
-                        ...t,
-                        assignments: t.assignments || [],
-                        schedule: typeof t.schedule === 'string' ? JSON.parse(t.schedule) : (t.schedule || grid(6,5))
-                    }));
+                    state.teachers = data.teachers.map(t => {
+                        const teacher = {
+                            ...t,
+                            assignments: t.assignments || [],
+                            schedule: typeof t.schedule === 'string' ? JSON.parse(t.schedule) : (t.schedule || grid(7,5))
+                        };
+                        migrateTeacherSchedule(teacher);
+                        return teacher;
+                    });
                 }
                 if(data.timetables) {
                     state.timetables = {};
@@ -285,7 +289,7 @@ async function saveData(data, isRetry = false) {
         if (payload.teachers) {
             payload.teachers = payload.teachers.map(t => ({
                 ...t,
-                schedule: JSON.stringify(t.schedule || grid(6,5))
+                schedule: JSON.stringify(t.schedule || grid(7,5))
             }));
         }
         
@@ -353,11 +357,15 @@ function loadFromLocalStorage() {
             delete data._lastSaved;
             
             if (data.teachers) {
-                data.teachers = data.teachers.map(t => ({
-                    ...t,
-                    assignments: t.assignments || [],
-                    schedule: typeof t.schedule === 'string' ? JSON.parse(t.schedule) : (t.schedule || grid(6,5))
-                }));
+                data.teachers = data.teachers.map(t => {
+                    const teacher = {
+                        ...t,
+                        assignments: t.assignments || [],
+                        schedule: typeof t.schedule === 'string' ? JSON.parse(t.schedule) : (t.schedule || grid(7,5))
+                    };
+                    migrateTeacherSchedule(teacher);
+                    return teacher;
+                });
             }
             if (data.facilities) {
                 ['gym', 'lib'].forEach(fac => {

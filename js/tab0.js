@@ -750,7 +750,7 @@ function syncTeachersFromConfig() {
                 id: idx + 1,
                 name: config.name,
                 assignments: [],
-                schedule: grid(6, 5),
+                schedule: grid(7, 5),
                 completed: false
             });
         }
