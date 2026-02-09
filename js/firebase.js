@@ -142,10 +142,27 @@ function setupFirebaseListener(doc, onSnapshot, setDoc) {
                 if(data.targetJeondam) state.targetJeondam = data.targetJeondam;
                 if(data.targetBogun) state.targetBogun = data.targetBogun;
                 if(data.facilities) {
-                    state.facilities = { 
-                        gym: JSON.parse(data.facilities.gym || '[]'), 
-                        lib: JSON.parse(data.facilities.lib || '[]') 
-                    };
+                    state.facilities = {};
+                    const facList = data.facilityList || state.facilityList || ['gym', 'lib'];
+                    facList.forEach(facId => {
+                        if (data.facilities[facId]) {
+                            try {
+                                state.facilities[facId] = typeof data.facilities[facId] === 'string' 
+                                    ? JSON.parse(data.facilities[facId]) 
+                                    : data.facilities[facId];
+                            } catch(e) {
+                                state.facilities[facId] = grid(7, 5);
+                            }
+                        } else {
+                            state.facilities[facId] = grid(7, 5);
+                        }
+                        // 7행 미만이면 보충
+                        if (state.facilities[facId] && state.facilities[facId].length < 7) {
+                            while (state.facilities[facId].length < 7) {
+                                state.facilities[facId].push(Array(5).fill(''));
+                            }
+                        }
+                    });
                 }
                 if(data.allocations) state.allocations = data.allocations;
                 if(data.specialSupport) state.specialSupport = data.specialSupport;
@@ -274,10 +291,11 @@ async function saveData(data, isRetry = false) {
         payload._lastSaved = currentTimestamp;
         
         if (payload.facilities) {
-            payload.facilities = { 
-                gym: JSON.stringify(payload.facilities.gym), 
-                lib: JSON.stringify(payload.facilities.lib) 
-            };
+            const serializedFacilities = {};
+            Object.keys(payload.facilities).forEach(facId => {
+                serializedFacilities[facId] = JSON.stringify(payload.facilities[facId] || []);
+            });
+            payload.facilities = serializedFacilities;
         }
         if (payload.timetables) {
             const serialized = {};
@@ -368,10 +386,19 @@ function loadFromLocalStorage() {
                 });
             }
             if (data.facilities) {
-                ['gym', 'lib'].forEach(fac => {
-                    if (data.facilities[fac] && data.facilities[fac].length < 7) {
-                        while (data.facilities[fac].length < 7) {
-                            data.facilities[fac].push(Array(5).fill(''));
+                const facIds = data.facilityList || Object.keys(data.facilities);
+                facIds.forEach(fac => {
+                    if (data.facilities[fac]) {
+                        // 문자열이면 파싱
+                        if (typeof data.facilities[fac] === 'string') {
+                            try { data.facilities[fac] = JSON.parse(data.facilities[fac]); }
+                            catch(e) { data.facilities[fac] = grid(7, 5); }
+                        }
+                        // 7행 미만이면 보충
+                        if (Array.isArray(data.facilities[fac]) && data.facilities[fac].length < 7) {
+                            while (data.facilities[fac].length < 7) {
+                                data.facilities[fac].push(Array(5).fill(''));
+                            }
                         }
                     }
                 });
