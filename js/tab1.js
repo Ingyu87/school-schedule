@@ -32,9 +32,18 @@ function renderTab1() {
                          'fa-building text-blue-500';
         
         let gridHtml = '';
+        const facPeriodKeys = ['1교시','2교시','3교시','4교시','4교시','5교시','6교시'];
+        const lowerT = state.scheduleTimes?.lower || {};
+        const upperT = state.scheduleTimes?.upper || {};
         for(let i = 0; i < 7; i++) {
             const rowClass = (i === 3) ? 'bg-pink-50' : (i === 4) ? 'bg-indigo-50' : 'bg-gray-50';
-            gridHtml += `<tr><td class="${rowClass} font-bold text-xs">${PERIOD_LABELS[i]}</td>`;
+            // 시간 표시: i===3은 upper 4교시, i===4는 lower 4교시, 나머지는 lower(같으면 하나만)
+            let facTime = '';
+            if (i === 3) facTime = upperT['4교시'] || '';
+            else if (i === 4) facTime = lowerT['4교시'] || '';
+            else facTime = lowerT[facPeriodKeys[i]] || '';
+            const facTimeHtml = facTime ? `<br><span class="text-[9px] text-gray-400 font-normal">${facTime}</span>` : '';
+            gridHtml += `<tr><td class="${rowClass} font-bold text-xs">${getPeriodLabels()[i]}${facTimeHtml}</td>`;
             for(let j = 0; j < 5; j++) {
                 const val = state.facilities[facId][i] ? state.facilities[facId][i][j] || '' : '';
                 const cellClass = (i === 3) ? 'bg-pink-50/30' : (i === 4) ? 'bg-indigo-50/30' : '';
@@ -115,13 +124,14 @@ window.updFac = function(t, r, c, v) {
         
         for (const cls of classes) {
             const grade = parseInt(cls.split('-')[0]);
-            if (r === 3 && grade >= 1 && grade <= 3) {
-                showAlert(`${cls}은(는) 1~3학년입니다. "4교시(1~3학년)" 행에 입력하세요.`);
+            const gradeIsLower = isLowerGroup(grade);
+            if (r === 3 && gradeIsLower) {
+                showAlert(`${cls}은(는) 1그룹(점심먼저)입니다. 아래 행에 입력하세요.`);
                 renderTab1();
                 return;
             }
-            if (r === 4 && grade >= 4 && grade <= 6) {
-                showAlert(`${cls}은(는) 4~6학년입니다. "4교시(4~6학년)" 행에 입력하세요.`);
+            if (r === 4 && !gradeIsLower) {
+                showAlert(`${cls}은(는) 2그룹(수업먼저)입니다. 위 행에 입력하세요.`);
                 renderTab1();
                 return;
             }

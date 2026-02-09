@@ -3,6 +3,7 @@
 function renderTab0() {
     renderDailyCounts();
     renderClassConfig();
+    renderScheduleGroupConfig();
     renderScheduleTimes();
     renderFacilityNames();
     renderFacilityList();
@@ -84,6 +85,62 @@ function renderClassConfig() {
             <input type="number" min="1" max="15" value="${count}" class="w-full text-center font-bold text-lg border-b outline-none" onchange="updateClassConfig('${gr}', this.value)">`;
         container.appendChild(div);
     });
+}
+
+function renderScheduleGroupConfig() {
+    if (!state.scheduleGroups) {
+        state.scheduleGroups = {
+            '1학년': 'lower', '2학년': 'lower', '3학년': 'lower',
+            '4학년': 'upper', '5학년': 'upper', '6학년': 'upper'
+        };
+    }
+    const container = document.getElementById('schedule-group-config');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    for (let g = 1; g <= 6; g++) {
+        const key = `${g}학년`;
+        const group = state.scheduleGroups[key] || 'lower';
+        container.innerHTML += `
+            <div class="flex flex-col items-center gap-1">
+                <span class="text-xs font-bold text-gray-700">${key}</span>
+                <select class="text-xs border rounded px-1 py-0.5 w-full text-center"
+                        onchange="updateScheduleGroup('${key}', this.value)">
+                    <option value="lower" ${group === 'lower' ? 'selected' : ''}>1그룹</option>
+                    <option value="upper" ${group === 'upper' ? 'selected' : ''}>2그룹</option>
+                </select>
+            </div>`;
+    }
+    
+    // 헤더 업데이트
+    updateScheduleHeaders();
+}
+
+function updateScheduleGroup(gradeKey, value) {
+    if (!state.scheduleGroups) state.scheduleGroups = {};
+    state.scheduleGroups[gradeKey] = value;
+    updateScheduleHeaders();
+    // 시설 시간표의 행 라벨도 갱신
+    if (typeof renderTab1 === 'function') renderTab1();
+    saveData();
+}
+
+function updateScheduleHeaders() {
+    const lowerGrades = [];
+    const upperGrades = [];
+    for (let g = 1; g <= 6; g++) {
+        const key = `${g}학년`;
+        const group = state.scheduleGroups?.[key] || (g <= 3 ? 'lower' : 'upper');
+        if (group === 'lower') lowerGrades.push(g);
+        else upperGrades.push(g);
+    }
+    const lowerLabel = lowerGrades.length > 0 ? lowerGrades.join(',') + '학년 (점심 먼저)' : '1그룹 (점심 먼저)';
+    const upperLabel = upperGrades.length > 0 ? upperGrades.join(',') + '학년 (수업 먼저)' : '2그룹 (수업 먼저)';
+    
+    const lowerHeader = document.getElementById('schedule-header-lower');
+    const upperHeader = document.getElementById('schedule-header-upper');
+    if (lowerHeader) lowerHeader.textContent = lowerLabel;
+    if (upperHeader) upperHeader.textContent = upperLabel;
 }
 
 function renderScheduleTimes() {

@@ -534,6 +534,8 @@ function renderTeacherTimetables() {
     tv.innerHTML = '';
     
     const classPeriodLabels = ["1교시","2교시","3교시","4교시","5교시","6교시"];
+    const lowerTimes = state.scheduleTimes?.lower || {};
+    const upperTimes = state.scheduleTimes?.upper || {};
     
     state.teachers.forEach((t, idx) => {
         if (!t.schedule || !Array.isArray(t.schedule)) {
@@ -629,7 +631,12 @@ function renderTeacherTimetables() {
         let gridHtml = '';
         const isCompleted = isTeacherCompleted(idx);
         for(let r = 0; r < 6; r++) {
-            gridHtml += `<tr><td class="bg-gray-50 font-bold text-xs">${classPeriodLabels[r]}</td>`;
+            const pKey = classPeriodLabels[r];
+            const lt = lowerTimes[pKey] || '';
+            const ut = upperTimes[pKey] || '';
+            const timeLabel = lt === ut ? lt : (lt && ut ? `${lt}` : lt || ut);
+            const timeHtml = timeLabel ? `<br><span class="text-[10px] text-gray-400 font-normal">${timeLabel}</span>` : '';
+            gridHtml += `<tr><td class="bg-gray-50 font-bold text-xs">${pKey}${timeHtml}</td>`;
             for(let c = 0; c < 5; c++) {
                 const val = t.schedule[r][c] || '';
                 const parsedEntries = parseScheduleEntries(val);
@@ -925,7 +932,7 @@ function checkAllConflicts(classKey, row, col, source, sourceIdx) {
         let facRow = row;
         if (row === 3) {
             // 4교시: 1~3학년은 4번 행, 4~6학년은 3번 행
-            facRow = (gradeNum <= 3) ? 4 : 3;
+            facRow = isLowerGroup(gradeNum) ? 4 : 3;
         } else if (row >= 4) {
             // 5교시 이상: +1
             facRow = row + 1;
@@ -1108,10 +1115,17 @@ window.toggleTeacherTimetable = function(idx) {
     });
     
     // 시간표 그리드 HTML
-    const classPeriodLabels = ["1교시","2교시","3교시","4교시","5교시","6교시"];
+    const classPeriodLabels2 = ["1교시","2교시","3교시","4교시","5교시","6교시"];
+    const lowerTimes2 = state.scheduleTimes?.lower || {};
+    const upperTimes2 = state.scheduleTimes?.upper || {};
     let gridHtml = '';
     for(let r = 0; r < 6; r++) {
-        gridHtml += `<tr><td class="bg-gray-50 font-bold text-xs p-2">${classPeriodLabels[r]}</td>`;
+        const pKey2 = classPeriodLabels2[r];
+        const lt2 = lowerTimes2[pKey2] || '';
+        const ut2 = upperTimes2[pKey2] || '';
+        const timeLabel2 = lt2 === ut2 ? lt2 : (lt2 && ut2 ? `${lt2}` : lt2 || ut2);
+        const timeHtml2 = timeLabel2 ? `<br><span class="text-[10px] text-gray-400 font-normal">${timeLabel2}</span>` : '';
+        gridHtml += `<tr><td class="bg-gray-50 font-bold text-xs p-2">${pKey2}${timeHtml2}</td>`;
         for(let c = 0; c < 5; c++) {
             const val = t.schedule[r][c] || '';
             const cellHover = isCompleted ? '' : 'cursor-pointer hover:bg-indigo-50';

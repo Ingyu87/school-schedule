@@ -166,6 +166,7 @@ function setupFirebaseListener(doc, onSnapshot, setDoc) {
                 if(data.curriculum) state.curriculum = data.curriculum;
                 if(data.teacherConfig) state.teacherConfig = data.teacherConfig;
                 if(data.scheduleTimes) state.scheduleTimes = data.scheduleTimes;
+                if(data.scheduleGroups) state.scheduleGroups = data.scheduleGroups;
                 if(data.facilityNames) state.facilityNames = data.facilityNames;
                 if(data.facilityList) state.facilityList = data.facilityList;
                 if(data.facilityCompletion) state.facilityCompletion = data.facilityCompletion;

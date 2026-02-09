@@ -216,7 +216,7 @@ function getFacilitySymbol(gradeNum, classNum, period, day) {
     // 시설 행 계산 (학급 시간표 행 → 시설 시간표 행)
     let facRow = period;
     if (period === 3) {
-        facRow = (gradeNum <= 3) ? 4 : 3;
+        facRow = isLowerGroup(gradeNum) ? 4 : 3;
     } else if (period >= 4) {
         facRow = period + 1;
     }
@@ -264,7 +264,7 @@ function getFacilityNamesForClass(gradeNum, classNum, period, day) {
     const classKey = `${gradeNum}-${classNum}`;
     let facRow = period;
     if (period === 3) {
-        facRow = (gradeNum <= 3) ? 4 : 3;
+        facRow = isLowerGroup(gradeNum) ? 4 : 3;
     } else if (period >= 4) {
         facRow = period + 1;
     }
@@ -362,7 +362,7 @@ window.downloadFacilityExcel = function(type) {
     try {
         const wb = XLSX.utils.book_new();
         // 교시 레이블 (엑셀용 텍스트만)
-        const periodLabels = PERIODS || ["1교시", "2교시", "3교시", "4교시(4~6학년)", "4교시(1~3학년)", "5교시", "6교시"];
+        const periodLabels = getPeriods();
         
         // 헤더
         const data = [['교시', '월', '화', '수', '목', '금']];

@@ -104,9 +104,14 @@ function renderEditorGrid() {
     
     let h = '';
     const classPeriodsLabels = ["1교시","2교시","3교시","4교시","5교시","6교시"];
+    const schedGroup = getScheduleGroup(gradeNum);
+    const times = state.scheduleTimes?.[schedGroup] || {};
     
     for(let i = 0; i < 6; i++) {
-        h += `<tr style="height:55px;"><td class="font-bold bg-gray-50 text-xs w-16">${classPeriodsLabels[i]}</td>`;
+        const periodKey = classPeriodsLabels[i];
+        const timeStr = times[periodKey] || '';
+        const timeHtml = timeStr ? `<br><span class="text-[10px] text-gray-400 font-normal">${timeStr}</span>` : '';
+        h += `<tr style="height:55px;"><td class="font-bold bg-gray-50 text-xs w-16">${periodKey}${timeHtml}</td>`;
         for(let j = 0; j < 5; j++) {
             if (i >= dailyLimit[j]) {
                 h += `<td class="tt-cell cell-disabled"></td>`;
@@ -117,7 +122,7 @@ function renderEditorGrid() {
             let fac = '';
             let facRow = i;
             if (i === 3) {
-                facRow = (gradeNum <= 3) ? 4 : 3;
+                facRow = isLowerGroup(gradeNum) ? 4 : 3;
             } else if (i >= 4) {
                 facRow = i + 1;
             }
@@ -437,7 +442,7 @@ function updatePaletteCounts() {
 
 function getFacilityRow(classRow, gradeNum) {
     if (classRow < 3) return classRow;
-    if (classRow === 3) return (gradeNum <= 3) ? 4 : 3;
+    if (classRow === 3) return isLowerGroup(gradeNum) ? 4 : 3;
     return classRow + 1;
 }
 

@@ -157,8 +157,12 @@
                         <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
                             <i class="fa-solid fa-clock text-green-500 mr-2"></i>2. 일과 운영표
                         </h2>
+                        <div class="mb-4 p-3 bg-gray-50 rounded-lg border">
+                            <div class="text-xs font-bold text-gray-600 mb-2">학년별 그룹 설정 (각 학년이 어느 그룹에 속하는지 선택)</div>
+                            <div class="grid grid-cols-6 gap-2" id="schedule-group-config"></div>
+                        </div>
                         <table class="base-table">
-                            <thead><tr><th class="w-16">구분</th><th>1~3학년 (점심 먼저)</th><th>4~6학년 (수업 먼저)</th></tr></thead>
+                            <thead><tr><th class="w-16">구분</th><th id="schedule-header-lower">1그룹 (점심 먼저)</th><th id="schedule-header-upper">2그룹 (수업 먼저)</th></tr></thead>
                             <tbody id="schedule-times-body">
                                 <!-- 동적으로 생성됨 -->
                             </tbody>
