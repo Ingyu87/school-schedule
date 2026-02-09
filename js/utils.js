@@ -426,7 +426,6 @@ function getGradeAllocations(gr) {
     return raw.filter(item => {
         const subj = item.split('(')[0];
         if (subj === '보건' || subj === '체육(보건)') return false;
-        if (gr === '5학년' && subj === '체육') return false;
         return true;
     });
 }
@@ -438,7 +437,6 @@ function sanitizeCommonAllocations() {
         const filtered = state.allocations.common[gr].filter(item => {
             const subj = item.split('(')[0];
             if (subj === '보건' || subj === '체육(보건)') return false;
-            if (gr === '5학년' && subj === '체육') return false;
             return true;
         });
         if (filtered.length !== state.allocations.common[gr].length) {
