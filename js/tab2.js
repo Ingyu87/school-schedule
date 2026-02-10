@@ -99,14 +99,7 @@ window.addSpecialSupport = function() {
     
     if (!state.specialSupport) state.specialSupport = [];
     
-    const exists = state.specialSupport.some(s => 
-        s.grade == gradeNum && s.classNum == classNum && s.subject === subject
-    );
-    if (exists) {
-        showAlert('이미 추가된 항목입니다.');
-        return;
-    }
-    
+    // 같은 학년-반-과목 조합을 여러 번 추가 가능 (여러 교사가 나눠서 담당)
     state.specialSupport.push({ grade: gradeNum, classNum: parseInt(classNum), subject, hours });
     saveData({ specialSupport: state.specialSupport });
     
@@ -272,21 +265,19 @@ function populateTeacherAssignmentOptions(idx) {
             }
         });
         
-        // 특수부장 과목
-        (state.specialSupport || []).forEach(sp => {
+        // 특수부장 과목 (배열 인덱스 포함하여 각 항목을 고유하게 식별, 같은 항목도 여러 교사가 배정 가능)
+        (state.specialSupport || []).forEach((sp, spIdx) => {
             if (sp.grade == gradeNum) {
-                const key = `${gradeNum}-${sp.classNum}-[특수]${sp.subject}`;
-                const isAssigned = assigned.has(key);
-                const disabled = (isAssigned || isCompleted) ? 'disabled' : '';
-                const opacityClass = (isAssigned || isCompleted) ? 'opacity-40' : '';
-                const label = isAssigned ?
-                    `⭐${gradeNum}-${sp.classNum} ${sp.subject} (${sp.hours}h) ✓` :
-                    `⭐${gradeNum}-${sp.classNum} ${sp.subject} (${sp.hours}h)`;
+                const key = `${gradeNum}-${sp.classNum}-[특수]${sp.subject}|${spIdx}`;
+                // 특수부장 지원 과목은 같은 항목도 여러 교사가 나눠서 담당 가능하므로 중복 체크 안 함
+                const disabled = isCompleted ? 'disabled' : '';
+                const opacityClass = isCompleted ? 'opacity-40' : '';
+                const label = `⭐${gradeNum}-${sp.classNum} ${sp.subject} (${sp.hours}h)`;
                 
                 container.innerHTML += `
                     <button onclick="toggleTeacherAssignment(${idx}, '${key}', ${sp.hours}, true)" ${disabled}
                             data-key="${key}"
-                            class="text-left p-2 text-xs border rounded hover:bg-yellow-50 transition-colors ${opacityClass} ${(isAssigned || isCompleted) ? 'bg-gray-200 cursor-not-allowed' : 'bg-white'}">
+                            class="text-left p-2 text-xs border rounded hover:bg-yellow-50 transition-colors ${opacityClass} ${isCompleted ? 'bg-gray-200 cursor-not-allowed' : 'bg-white'}">
                         ${label}
                     </button>`;
             }
@@ -393,33 +384,50 @@ window.toggleTeacherAssignment = function(idx, key, hours, isSpecial) {
         showAlert('완료 상태에서는 수정할 수 없습니다.<br>완료를 해제한 뒤 수정하세요.');
         return;
     }
-    // 값 파싱: "3-1-영어" 또는 "4-2-[특수]과학"
+    // 값 파싱: "3-1-영어" 또는 "4-2-[특수]과학" 또는 "2-4-[특수]통합|0" (특수부장 지원 인덱스 포함)
     const parts = key.split('-');
     if (parts.length < 3) return;
     
     const gradeNum = parseInt(parts[0]);
     const classNum = parseInt(parts[1]);
-    const subjVal = parts.slice(2).join('-'); // "[특수]" 포함 가능
+    let subjVal = parts.slice(2).join('-'); // "[특수]" 포함 가능
+    let specialSupportIndex = null;
+    // 특수부장 지원 인덱스 추출 (|0 형태)
+    if (subjVal.includes('|')) {
+        const parts2 = subjVal.split('|');
+        subjVal = parts2[0];
+        specialSupportIndex = parseInt(parts2[1]);
+    }
     
     if (!state.teachers[idx].assignments) state.teachers[idx].assignments = [];
     
-    // 이미 배정되어 있는지 확인
-    const existingIdx = state.teachers[idx].assignments.findIndex(a => 
-        a.grade == gradeNum && a.classNum == classNum && a.subject === subjVal
-    );
+    // 이미 배정되어 있는지 확인 (특수부장 지원은 인덱스까지 비교)
+    const existingIdx = state.teachers[idx].assignments.findIndex(a => {
+        if (isSpecial && specialSupportIndex !== null) {
+            // 특수부장 지원: 인덱스까지 비교
+            return a.grade == gradeNum && a.classNum == classNum && a.subject === subjVal && a.specialSupportIndex === specialSupportIndex;
+        } else {
+            // 일반 전담: 인덱스 없이 비교
+            return a.grade == gradeNum && a.classNum == classNum && a.subject === subjVal;
+        }
+    });
     
     if (existingIdx >= 0) {
         // 이미 있으면 제거
         state.teachers[idx].assignments.splice(existingIdx, 1);
     } else {
         // 없으면 추가
-        state.teachers[idx].assignments.push({
+        const assignment = {
             grade: gradeNum,
             classNum: classNum,
             subject: subjVal,
             hours: hours,
             isSpecial: isSpecial
-        });
+        };
+        if (isSpecial && specialSupportIndex !== null) {
+            assignment.specialSupportIndex = specialSupportIndex;
+        }
+        state.teachers[idx].assignments.push(assignment);
     }
     
     saveData({ teachers: state.teachers });
