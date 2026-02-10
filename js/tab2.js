@@ -46,9 +46,13 @@ function renderSpecialSupport() {
     
     list.innerHTML = '';
     (state.specialSupport || []).forEach((s, idx) => {
+        const canSplit = s.hours > 1 && s.hours % 0.5 === 0; // 1시간 초과이고 0.5의 배수일 때만 나누기 가능
+        const splitBtn = canSplit ? 
+            `<i class="fa-solid fa-code-branch ml-2 cursor-pointer hover:text-blue-500" onclick="splitSpecialSupport(${idx})" title="시수 나누기"></i>` : '';
         list.innerHTML += `
             <span class="inline-flex items-center bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">
                 ${s.grade}-${s.classNum}반 ${s.subject}(${s.hours}h)
+                ${splitBtn}
                 <i class="fa-solid fa-xmark ml-2 cursor-pointer hover:text-red-500" onclick="removeSpecialSupport(${idx})"></i>
             </span>`;
     });
@@ -113,6 +117,39 @@ window.addSpecialSupport = function() {
 
 window.removeSpecialSupport = function(idx) {
     state.specialSupport.splice(idx, 1);
+    saveData({ specialSupport: state.specialSupport });
+    
+    // 모든 전담 교사의 드롭다운 업데이트
+    state.teachers.forEach((t, tidx) => {
+        populateTeacherAssignmentOptions(tidx);
+    });
+    
+    renderTab2();
+};
+
+window.splitSpecialSupport = function(idx) {
+    const item = state.specialSupport[idx];
+    if (!item || item.hours <= 1) return;
+    
+    const splitHours = item.hours / 2;
+    
+    // 원본 항목 삭제
+    state.specialSupport.splice(idx, 1);
+    
+    // 나눈 시수로 2개 항목 추가
+    state.specialSupport.push({
+        grade: item.grade,
+        classNum: item.classNum,
+        subject: item.subject,
+        hours: splitHours
+    });
+    state.specialSupport.push({
+        grade: item.grade,
+        classNum: item.classNum,
+        subject: item.subject,
+        hours: splitHours
+    });
+    
     saveData({ specialSupport: state.specialSupport });
     
     // 모든 전담 교사의 드롭다운 업데이트
