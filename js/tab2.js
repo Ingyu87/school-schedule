@@ -302,19 +302,28 @@ function populateTeacherAssignmentOptions(idx) {
             }
         });
         
-        // 특수부장 과목 (배열 인덱스 포함하여 각 항목을 고유하게 식별, 같은 항목도 여러 교사가 배정 가능)
+        // 특수부장 과목 (배열 인덱스 포함하여 각 항목을 고유하게 식별)
         (state.specialSupport || []).forEach((sp, spIdx) => {
             if (sp.grade == gradeNum) {
                 const key = `${gradeNum}-${sp.classNum}-[특수]${sp.subject}|${spIdx}`;
-                // 특수부장 지원 과목은 같은 항목도 여러 교사가 나눠서 담당 가능하므로 중복 체크 안 함
-                const disabled = isCompleted ? 'disabled' : '';
-                const opacityClass = isCompleted ? 'opacity-40' : '';
-                const label = `⭐${gradeNum}-${sp.classNum} ${sp.subject} (${sp.hours}h)`;
+                // 현재 교사가 이미 이 특수부장 지원 항목을 배정받았는지 확인
+                const currentTeacher = state.teachers[idx];
+                const isAssigned = (currentTeacher.assignments || []).some(a => 
+                    a.grade == sp.grade && 
+                    a.classNum == sp.classNum && 
+                    a.subject === `[특수]${sp.subject}` &&
+                    a.specialSupportIndex === spIdx
+                );
+                const disabled = (isAssigned || isCompleted) ? 'disabled' : '';
+                const opacityClass = (isAssigned || isCompleted) ? 'opacity-40' : '';
+                const label = isAssigned ?
+                    `⭐${gradeNum}-${sp.classNum} ${sp.subject} (${sp.hours}h) ✓` :
+                    `⭐${gradeNum}-${sp.classNum} ${sp.subject} (${sp.hours}h)`;
                 
                 container.innerHTML += `
                     <button onclick="toggleTeacherAssignment(${idx}, '${key}', ${sp.hours}, true)" ${disabled}
                             data-key="${key}"
-                            class="text-left p-2 text-xs border rounded hover:bg-yellow-50 transition-colors ${opacityClass} ${isCompleted ? 'bg-gray-200 cursor-not-allowed' : 'bg-white'}">
+                            class="text-left p-2 text-xs border rounded hover:bg-yellow-50 transition-colors ${opacityClass} ${(isAssigned || isCompleted) ? 'bg-gray-200 cursor-not-allowed' : 'bg-white'}">
                         ${label}
                     </button>`;
             }
@@ -387,19 +396,22 @@ window.updateTeacherClassOptions = function(idx) {
     });
     
     if (isSpecial) {
-        // 특수부장 과목: 해당 과목이 설정된 반만 표시
+        // 특수부장 과목: 해당 과목이 설정된 반만 표시 (인덱스별로 구분)
         const realSubj = subjVal.replace('[특수]', '');
-        (state.specialSupport || []).forEach(sp => {
+        (state.specialSupport || []).forEach((sp, spIdx) => {
             if (sp.grade == gradeNum && sp.subject === realSubj) {
-                // 같은 특수부장 과목이 이미 배정되었는지 확인
+                // 같은 특수부장 지원 항목(인덱스 포함)이 이미 배정되었는지 확인
                 const alreadyAssigned = state.teachers.some(t => 
                     (t.assignments || []).some(a => 
-                        a.grade == gradeNum && a.classNum == sp.classNum && a.subject === subjVal
+                        a.grade == gradeNum && 
+                        a.classNum == sp.classNum && 
+                        a.subject === subjVal &&
+                        a.specialSupportIndex === spIdx
                     )
                 );
                 const disabled = alreadyAssigned ? 'disabled' : '';
                 const label = alreadyAssigned ? `${sp.classNum}반 (배정됨)` : `${sp.classNum}반`;
-                classSel.innerHTML += `<option value="${sp.classNum}" ${disabled}>${label}</option>`;
+                classSel.innerHTML += `<option value="${sp.classNum}" data-spidx="${spIdx}" ${disabled}>${label}</option>`;
             }
         });
     } else {
