@@ -270,7 +270,7 @@ function populateTeacherAssignmentOptions(idx) {
     });
     
     // 2~6학년 순회
-    [2, 3, 4, 5, 6].forEach(gradeNum => {
+    [1, 2, 3, 4, 5, 6].forEach(gradeNum => {
         const gr = `${gradeNum}학년`;
         const classCount = state.config[gr]?.classes || 0;
         
