@@ -76,6 +76,8 @@ let state = {
         gym: '느티홀 (체육관)',
         lib: '글샘터 (도서관)'
     },
+    // 시설별 연결 교과: 있으면 학급 시간표/엑셀에 교과명으로 표시 (없으면 시설 이름)
+    facilitySubject: { gym: '체육', lib: '국어' },
     facilityList: ['gym', 'lib'], // 시설 ID 목록 (동적 추가 가능)
     scheduleTimes: {
         // 1그룹 (점심 먼저)
@@ -141,6 +143,12 @@ let state = {
         '6학년': { '국어': 5, '수학': 5, '사회': 3, '과학': 3, '영어': 3, '음악': 2, '미술': 1, '체육': 3, '실과': 1, '도덕': 1, '통합': 0, '창체': 2 }
     }
 };
+
+// 시설에 연결된 교과가 있으면 교과명, 없으면 시설 이름 반환 (학급 시간표/엑셀 표시용)
+function getFacilityDisplayName(facId) {
+    if (state.facilitySubject && state.facilitySubject[facId]) return state.facilitySubject[facId];
+    return state.facilityNames?.[facId] || facId;
+}
 
 // 교사 시간표 6x5 → 7x5 마이그레이션
 function migrateTeacherSchedule(teacher) {

@@ -266,11 +266,13 @@ function renderFacilityList() {
     
     container.innerHTML = '';
     
+    const subjectOpts = (typeof CURRICULUM_COLS !== 'undefined' ? CURRICULUM_COLS : ['국어','수학','사회','과학','영어','음악','미술','체육','실과','도덕','통합','창체']);
     state.facilityList.forEach((facId, idx) => {
         const facilityName = state.facilityNames[facId] || `시설${idx + 1}`;
+        const linkedSubj = (state.facilitySubject && state.facilitySubject[facId]) || '';
         const isDefault = facId === 'gym' || facId === 'lib';
         const canDelete = !isDefault && state.facilityList.length > 2; // 기본 2개는 삭제 불가
-        
+        const subjOptions = subjectOpts.map(s => `<option value="${s}" ${linkedSubj === s ? 'selected' : ''}>${s}</option>`).join('');
         container.innerHTML += `
             <div class="flex items-center gap-2 p-3 border rounded-lg bg-gray-50">
                 <div class="flex-1">
@@ -281,6 +283,11 @@ function renderFacilityList() {
                            class="w-full border rounded px-3 py-2 text-sm" 
                            placeholder="예: 느티홀 (체육관)"
                            onchange="updateFacilityName('${facId}', this.value)">
+                    <label class="block text-xs font-bold text-gray-600 mt-2 mb-1">연결 교과 (학급 시간표 표시)</label>
+                    <select class="w-full border rounded px-3 py-2 text-sm" onchange="updateFacilitySubject('${facId}', this.value)">
+                        <option value="" ${!linkedSubj ? 'selected' : ''}>없음 (시설 이름 표시)</option>
+                        ${subjOptions}
+                    </select>
                 </div>
                 ${canDelete ? `
                     <button onclick="removeFacility('${facId}')" 
@@ -319,6 +326,18 @@ window.updateFacilityName = function(type, value) {
     renderTab1(); // Tab 1도 업데이트
 };
 
+window.updateFacilitySubject = function(facId, value) {
+    if (!state.facilitySubject) state.facilitySubject = { gym: '체육', lib: '국어' };
+    if (value) {
+        state.facilitySubject[facId] = value;
+    } else {
+        delete state.facilitySubject[facId];
+    }
+    saveData({ facilitySubject: state.facilitySubject });
+    renderTab1();
+    if (typeof renderEditorGrid === 'function') renderEditorGrid();
+};
+
 window.addNewFacility = function() {
     if (!state.facilityList) {
         state.facilityList = ['gym', 'lib'];
@@ -341,11 +360,14 @@ window.addNewFacility = function() {
     state.facilityList.push(newId);
     state.facilities[newId] = grid(7, 5);
     state.facilityNames[newId] = `시설${state.facilityList.length}`;
+    if (!state.facilitySubject) state.facilitySubject = { gym: '체육', lib: '국어' };
+    state.facilitySubject[newId] = ''; // 연결 교과 없음(시설 이름 표시)
     
     saveData({ 
         facilityList: state.facilityList,
         facilities: state.facilities,
-        facilityNames: state.facilityNames
+        facilityNames: state.facilityNames,
+        facilitySubject: state.facilitySubject
     });
     
     renderTab0();
@@ -370,11 +392,13 @@ window.removeFacility = function(facId) {
             state.facilityList.splice(idx, 1);
             delete state.facilities[facId];
             delete state.facilityNames[facId];
+            if (state.facilitySubject) delete state.facilitySubject[facId];
             
             saveData({ 
                 facilityList: state.facilityList,
                 facilities: state.facilities,
-                facilityNames: state.facilityNames
+                facilityNames: state.facilityNames,
+                facilitySubject: state.facilitySubject
             });
             
             renderTab0();

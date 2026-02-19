@@ -193,6 +193,8 @@ function setupFirebaseListener(doc, onSnapshot, setDoc) {
                 if(data.scheduleGroups) state.scheduleGroups = data.scheduleGroups;
                 if(data.facilityNames) state.facilityNames = data.facilityNames;
                 if(data.facilityList) state.facilityList = data.facilityList;
+                if(data.facilitySubject) state.facilitySubject = data.facilitySubject;
+                else if(!state.facilitySubject) state.facilitySubject = { gym: '체육', lib: '국어' };
                 if(data.facilityCompletion) state.facilityCompletion = data.facilityCompletion;
                 if(data.tabCompletion) state.tabCompletion = data.tabCompletion;
                 if(data.timetableCompletion) state.timetableCompletion = data.timetableCompletion;
@@ -410,6 +412,7 @@ function loadFromLocalStorage() {
                 });
             }
             Object.assign(state, data);
+            if(!state.facilitySubject) state.facilitySubject = { gym: '체육', lib: '국어' };
             console.log("Loaded from localStorage");
         } catch (e) {
             console.error("Failed to load from localStorage", e);

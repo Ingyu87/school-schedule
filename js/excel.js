@@ -283,7 +283,9 @@ function getFacilityNamesForClass(gradeNum, classNum, period, day) {
             if (state.facilities[facId] && state.facilities[facId][facRow]) {
                 const facValue = state.facilities[facId][facRow][day] || '';
                 if (facValue.includes(classKey)) {
-                    names.add(state.facilityNames?.[facId] || facId);
+                    const displayName = typeof getFacilityDisplayName === 'function'
+                        ? getFacilityDisplayName(facId) : (state.facilityNames?.[facId] || facId);
+                    names.add(displayName);
                 }
             }
         });
@@ -291,14 +293,13 @@ function getFacilityNamesForClass(gradeNum, classNum, period, day) {
         if (state.facilities.gym && state.facilities.gym[facRow]) {
             const gymValue = state.facilities.gym[facRow][day] || '';
             if (gymValue.includes(classKey)) {
-                names.add(state.facilityNames?.gym || '느티홀 (체육관)');
+                names.add(typeof getFacilityDisplayName === 'function' ? getFacilityDisplayName('gym') : (state.facilityNames?.gym || '느티홀 (체육관)'));
             }
         }
-        
         if (state.facilities.lib && state.facilities.lib[facRow]) {
             const libValue = state.facilities.lib[facRow][day] || '';
             if (libValue.includes(classKey)) {
-                names.add(state.facilityNames?.lib || '글샘터 (도서관)');
+                names.add(typeof getFacilityDisplayName === 'function' ? getFacilityDisplayName('lib') : (state.facilityNames?.lib || '글샘터 (도서관)'));
             }
         }
     }

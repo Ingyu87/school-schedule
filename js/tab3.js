@@ -132,8 +132,9 @@ function renderEditorGrid() {
                 for (const facId of state.facilityList) {
                     if (state.facilities[facId] && state.facilities[facId][facRow]) {
                         if (checkFacilityAssignment(state.facilities[facId][facRow][j], shortK)) {
-                            const facName = state.facilityNames[facId] || facId;
-                            assignedFacilities.push(facName);
+                            const displayName = typeof getFacilityDisplayName === 'function'
+                                ? getFacilityDisplayName(facId) : (state.facilityNames[facId] || facId);
+                            assignedFacilities.push(displayName);
                         }
                     }
                 }
